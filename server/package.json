@@ -1,0 +1,25 @@
+{
+  "name": "sock-it-server",
+  "version": "1.0.0",
+  "description": "Simple games built around web sockets",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nosliwmichael/sock-it.git"
+  },
+  "author": "Michael Wilson",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nosliwmichael/sock-it/issues"
+  },
+  "homepage": "https://github.com/nosliwmichael/sock-it#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1"
+  }
+}
