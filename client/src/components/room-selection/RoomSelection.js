@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './RoomSelection.css';
-import Quizzer from '../quiz-random/Quizzer';
+import Quizzer from '../quizzer/Quizzer';
 import { useSocket } from '../context/SocketContext';
 
 const RoomSelectionScreen = ({ gameMode }) => {
@@ -13,13 +13,8 @@ const RoomSelectionScreen = ({ gameMode }) => {
 
   const onSubmit = (e) => {
     e.preventDefault();
-    handleJoinRoom(roomName);
-  };
-
-  const handleJoinRoom = () => {
     if (roomName.trim()) {
-      socket.emit('joinRoom', { room: roomName, playerName: playerName });
-      setIsSubmitted(true);
+      socket.emit('joinRoom', { room: roomName.trim(), playerName: playerName.trim() });
     }
   };
 
@@ -28,8 +23,16 @@ const RoomSelectionScreen = ({ gameMode }) => {
       setGreeting(message); // Update state with the received welcome message
     });
 
+    socket.on('roomFull', (isFull) => {
+      if (isFull) {
+        alert('Room is full');
+      }
+      setIsSubmitted(!isFull);
+    });
+
     return () => {
       socket.off('welcome'); // Clean up the event listener
+      socket.off('roomFull'); // Clean up the event listener
     };
   });
 

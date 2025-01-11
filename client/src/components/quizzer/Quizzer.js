@@ -7,10 +7,23 @@ const QuizzerScreen = ({ roomName }) => {
   const [opponent, setOpponent] = useState('');
   const [startTimer, setStartTimer] = useState('');
   const [isGameStarted, setIsGameStarted] = useState(false);
-  const [question, setQuestion] = useState('');
+  const [question, setQuestion] = useState(null);
   const [questionTimer, setQuestionTimer] = useState('');
+  const [answerMe, setAnswerMe] = useState('');
+  const [answerOpponent, setAnswerOpponent] = useState('');
+  const [submitDisabled, setSubmitDisabled] = useState(false);
 
   const { currentSocket: socket } = useSocket();
+
+  const onSubmitAnswer = (e) => {
+    e.preventDefault();
+    console.log('Submitting answer...');
+    if (roomName.trim()) {
+      console.log('Emitting answer...', roomName);
+      socket.emit('answer', { roomName: roomName.trim(), answers: [answerMe.trim(), answerOpponent.trim()] });
+      setSubmitDisabled(true);
+    }
+  };
 
   useEffect(() => {
     const resetGame = () => {
@@ -58,7 +71,10 @@ const QuizzerScreen = ({ roomName }) => {
     socket.on('playerLeft', handlePlayerLeft);
     socket.on('playerUpdate', handlePlayerUpdate);
     socket.on('startTimer', handleStartTimer);
-    socket.on('question', setQuestion);
+    socket.on('question', (q) => {
+      setQuestion(q);
+      setSubmitDisabled(false);
+    });
     socket.on('questionTimer', handleQuestionTimer);
     socket.on('gameOver', resetGame);
 
@@ -90,7 +106,7 @@ const QuizzerScreen = ({ roomName }) => {
               <td>
                 {me?.ready ? 
                 <span style={{ color: 'green' }}>✔</span> : 
-                <button className="button" onClick={() => socket.emit('playerReady')}>Ready</button>}
+                <button className="button" onClick={() => socket.emit('playerReady', roomName)}>Ready</button>}
               </td>
             </tr>
             <tr>
@@ -120,6 +136,13 @@ const QuizzerScreen = ({ roomName }) => {
           </div>
           <div className="question">
             <h2>{question ? question : ''}</h2>
+          </div>
+          <div className="answer">
+            <form onSubmit={onSubmitAnswer}>
+              <input type="text" onChange={(e) => setAnswerMe(e.target.value)} placeholder="Answer for you..." className="input"/>
+              <input type="text" onChange={(e) => setAnswerOpponent(e.target.value)} placeholder="Answer for opponent..." className="input"/>
+              <button className="button" type="submit" disabled={submitDisabled}>Submit</button>
+            </form>
           </div>
         </div>
       )}
