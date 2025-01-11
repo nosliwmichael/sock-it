@@ -33,7 +33,7 @@ const QuizzerScreen = ({ roomName }) => {
       setQuestion('');
       setQuestionTimer('');
     };
-    
+
     const handlePlayerUpdate = (players) => {
       setMe(null);
       setOpponent(null);
@@ -66,7 +66,7 @@ const QuizzerScreen = ({ roomName }) => {
         setQuestionTimer(null);
       }
     };
-
+    
     socket.on('playerJoined', handlePlayerUpdate);
     socket.on('playerLeft', handlePlayerLeft);
     socket.on('playerUpdate', handlePlayerUpdate);
@@ -80,13 +80,13 @@ const QuizzerScreen = ({ roomName }) => {
 
     // Clean up the event listener when the component unmounts
     return () => {
-      socket.off('playerJoined', handlePlayerUpdate);
-      socket.off('playerLeft', handlePlayerUpdate);
-      socket.off('playerUpdate', handlePlayerUpdate);
-      socket.off('startTimer', handleStartTimer);
-      socket.off('question', setQuestion);
-      socket.off('questionTimer', handleQuestionTimer);
-      socket.off('gameOver', resetGame);
+      socket.off('playerJoined');
+      socket.off('playerLeft');
+      socket.off('playerUpdate');
+      socket.off('startTimer');
+      socket.off('question');
+      socket.off('questionTimer');
+      socket.off('gameOver');
     };
   }, [socket]);
 
