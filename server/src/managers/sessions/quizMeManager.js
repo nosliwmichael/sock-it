@@ -1,5 +1,5 @@
 module.exports = (io) => {
-    quizTurn = io.of('/quiz-turn');
+    quizTurn = io.of('/quiz-me');
 
     registerIoEvents(quizTurn);
 

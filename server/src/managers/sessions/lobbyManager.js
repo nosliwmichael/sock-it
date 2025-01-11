@@ -18,12 +18,12 @@ function registerSocketEvents(socket) {
 
     socket.emit('gameModes', [
         {
-            name: 'Quiz Random',
-            path: '/quiz-random'
+            name: 'Quizzer',
+            path: '/quizzer'
         },
         {
-            name: 'Quiz Turn',
-            path: '/quiz-turn'
+            name: 'Quiz Me',
+            path: '/quiz-me'
         }
     ]);
     socket.on('disconnect', () => {

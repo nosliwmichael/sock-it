@@ -1,13 +1,13 @@
 const lobbyManager = require("./lobbyManager");
-const quizRandomManager = require("./quizRandomManager");
-const quizTurnManager = require("./quizTurnManager");
+const quizzerManager = require("./quizzerManager");
+const quizMeManager = require("./quizMeManager");
 
 let lobby;
-let quizRandom;
-let quizTurns;
+let quizzer;
+let quizMe;
 
 module.exports = (io) => {
     lobby = lobbyManager(io);
-    quizRandom = quizRandomManager(io);
-    quizTurns = quizTurnManager(io);
+    quizzer = quizzerManager(io);
+    quizMe = quizMeManager(io);
 };
