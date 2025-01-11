@@ -1,7 +1,7 @@
-const Player = require('./player');
-const Question = require('./question');
+import Player from './player.js';
+import Question from './question.js';
 
-module.exports = class Room {
+export default class Room {
     /**
      * @param {string} name 
      */

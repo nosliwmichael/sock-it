@@ -1,12 +1,12 @@
-const lobbyManager = require("./lobbyManager");
-const quizzerManager = require("./quizzerManager");
-const quizMeManager = require("./quizMeManager");
+import lobbyManager from "./lobbyManager.js";
+import quizzerManager from "./quizzerManager.js";
+import quizMeManager from "./quizMeManager.js";
 
 let lobby;
 let quizzer;
 let quizMe;
 
-module.exports = (io) => {
+export default (io) => {
     lobby = lobbyManager(io);
     quizzer = quizzerManager(io);
     quizMe = quizMeManager(io);

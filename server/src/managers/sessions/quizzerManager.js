@@ -1,9 +1,9 @@
-const Answer = require("../../models/answer");
-const Player = require("../../models/player");
-const Question = require("../../models/question");
-const Room = require("../../models/room");
+import Answer from "../../models/answer.js";
+import Player from "../../models/player.js";
+import Question from "../../models/question.js";
+import Room from "../../models/room.js";
 
-module.exports = (io) => {
+export default (io) => {
     return new Quizzer(io).io;
 }
 

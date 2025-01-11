@@ -1,6 +1,6 @@
-const Answer = require('./answer');
+import Answer from './answer.js';
 
-module.exports = class Question {
+export default class Question {
     /**
      * @param {string} question 
      */

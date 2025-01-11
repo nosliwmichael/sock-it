@@ -1,7 +1,7 @@
-const express = require("express");
-const { createServer } = require("http");
-const { Server } = require("socket.io");
-const sessionManager = require("./managers/sessions/sessionManager");
+import express from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import sessionManager from "./managers/sessions/sessionManager.js";
 
 const app = express();
 const httpServer = createServer(app);

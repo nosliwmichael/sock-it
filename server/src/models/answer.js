@@ -1,4 +1,4 @@
-module.exports = class Answer {
+export default class Answer {
     /**
      * @param {string} playerId 
      * @param {string} answer1

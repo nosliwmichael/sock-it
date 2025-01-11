@@ -1,5 +1,5 @@
-module.exports = (io) => {
-    lobby = io.of('/lobby');
+export default (io) => {
+    const lobby = io.of('/lobby');
 
     registerIoEvents(lobby);
 
