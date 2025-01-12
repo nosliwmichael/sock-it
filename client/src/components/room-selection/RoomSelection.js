@@ -4,7 +4,6 @@ import Quizzer from '../quizzer/Quizzer';
 import { useSocket } from '../context/SocketContext';
 
 const RoomSelectionScreen = ({ gameMode }) => {
-  const [greeting, setGreeting] = useState('');
   const [roomName, setRoomName] = useState('');
   const [playerName, setPlayerName] = useState('');
   const [isSubmitted, setIsSubmitted] = useState('');
@@ -19,10 +18,6 @@ const RoomSelectionScreen = ({ gameMode }) => {
   };
 
   useEffect(() => {
-    socket.on('welcome', (message) => {
-      setGreeting(message); // Update state with the received welcome message
-    });
-
     socket.on('roomFull', (isFull) => {
       if (isFull) {
         alert('Room is full');
@@ -31,16 +26,15 @@ const RoomSelectionScreen = ({ gameMode }) => {
     });
 
     return () => {
-      socket.off('welcome'); // Clean up the event listener
       socket.off('roomFull'); // Clean up the event listener
     };
   });
 
   if (isSubmitted && roomName) {
-    if (gameMode.name === 'Quizzer') {
+    if (gameMode === 'Quizzer') {
       return <Quizzer roomName={roomName} />;
     }
-    else if (gameMode.name === 'Quiz Me') {
+    else if (gameMode === 'QuizMe') {
       // return <QuizMe roomName={roomName} />;
     }
   }
@@ -48,14 +42,14 @@ const RoomSelectionScreen = ({ gameMode }) => {
   return (
     <div className="RoomSelectionScreen">
       <header className="header">
-        <h1>{greeting}</h1>
+        <h1>Welcome to {gameMode.name}</h1>
       </header>
       <form onSubmit={onSubmit}>
         <input
           className="input"
           type="text"
           value={roomName}
-          required="true"
+          required={true}
           onChange={(e) => setRoomName(e.target.value)}
           placeholder="Enter room name"
         />
@@ -63,7 +57,7 @@ const RoomSelectionScreen = ({ gameMode }) => {
           className="input"
           type="text"
           value={playerName}
-          required="true"
+          required={true}
           onChange={(e) => setPlayerName(e.target.value)}
           placeholder="Enter player name"
         />

@@ -1,9 +1,5 @@
 export default (io) => {
-    const quizMe = io.of('/quiz-me');
-
-    registerIoEvents(quizMe);
-
-    return quizMe;
+    registerIoEvents(io.of('/quiz-me'));
 }
 
 function registerIoEvents(io) {

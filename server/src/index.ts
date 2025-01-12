@@ -1,7 +1,7 @@
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import sessionManager from "./managers/sessions/sessionManager.js";
+import QuizzerSocketManager from "./managers/sockets/quizzerSocketManager.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -11,7 +11,7 @@ const io = new Server(httpServer, {
         methods: ["GET", "POST"]
     }
 });
-sessionManager(io);
+QuizzerSocketManager(io);
 
 httpServer.listen(3001, () => {
     console.log("Started listening on port 3001");
