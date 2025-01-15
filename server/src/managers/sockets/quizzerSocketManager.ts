@@ -1,9 +1,9 @@
 import { Namespace, Server, Socket } from "socket.io";
-import Answer from "../../models/answer.js";
-import Player from "../../models/player.js";
-import Question from "../../models/question.js";
-import Room from "../../models/room.js";
-import GameSessionManager from "../events/gameSessionManager.js";
+import { Answer } from "../../models/answer.js";
+import { Player } from "../../models/player.js";
+import { Question } from "../../models/question.js";
+import { Room } from "../../models/room.js";
+import { GameSessionsManager } from "../events/gameSessionManager.js";
 
 const GameName = 'Quizzer';
 const questions = [
@@ -20,11 +20,11 @@ export default (io: Server) => {
 
 class QuizzerSocketManager {
     private io: Namespace;
-    private gameSessionManager: GameSessionManager;
+    private gameSessionsManager: GameSessionsManager;
 
     constructor(io: Server) {
         this.io = io.of('/quizzer');
-        this.gameSessionManager = new GameSessionManager({
+        this.gameSessionsManager = new GameSessionsManager({
             name: GameName,
             maxPlayers: 1,
             maxRounds: 5,
@@ -47,7 +47,7 @@ class QuizzerSocketManager {
         socket.on('joinRoom', (data) => {
             const { room: roomName, playerName } = data;
             
-            let room = this.gameSessionManager.joinRoom(roomName, new Player(socket.id, playerName));
+            let room = this.gameSessionsManager.joinRoom(roomName, new Player(socket.id, playerName));
             if (room) {
                 socket.join(roomName);
                 socket.emit('roomFull', false);
@@ -61,16 +61,16 @@ class QuizzerSocketManager {
 
     playerReadyEvent(socket: Socket) {
         socket.on('playerReady', () => {
-            let isPlayerReady = this.gameSessionManager.setPlayerReady(socket.id);
+            let isPlayerReady = this.gameSessionsManager.setPlayerReady(socket.id);
             if (isPlayerReady) {
                 console.log(`${socket.id} is ready!`);
-                const roomName = this.gameSessionManager.playerRoomMap.get(socket.id);
-                const room: Room | undefined | null = roomName ? this.gameSessionManager.rooms.get(roomName) : null;
+                const roomName = this.gameSessionsManager.playerRoomMap.get(socket.id);
+                const room: Room | undefined | null = roomName ? this.gameSessionsManager.rooms.get(roomName) : null;
                 if (roomName && room) {
                     this.io.in(roomName).emit('playerUpdate', Array.from(room.players.entries()));
                 }
                 if (room &&
-                    room.players.size === this.gameSessionManager.config.maxPlayers && 
+                    room.players.size === this.gameSessionsManager.config.maxPlayers && 
                     Array.from(room.players.values()).every(player => player.ready)) {
                         // TODO: Start game
                 }
@@ -81,7 +81,7 @@ class QuizzerSocketManager {
     answerEvent(socket: Socket) {
         socket.on('answer', (data) => {
             const { roomName, answers } = data;
-            let room = this.gameSessionManager.rooms.get(roomName);
+            let room = this.gameSessionsManager.rooms.get(roomName);
             if (room && room.isAnswering) {
                 let answer = new Answer(socket.id, answers[0], answers[1]);
                 room.currentQuestion?.answers.set(socket.id, answer);
@@ -92,7 +92,7 @@ class QuizzerSocketManager {
 
     disconnectEvent(socket: Socket) {
         socket.on('disconnect', () => {
-            const room = this.gameSessionManager.leaveRoom(socket.id)
+            const room = this.gameSessionsManager.leaveRoom(socket.id)
             if (room) {        
                 console.log('Left room', room.name, socket.id);
                 console.log(`Current players in room ${room.name}:`, room.players);
@@ -109,7 +109,7 @@ class QuizzerSocketManager {
         await countdownEvent(5, 1000, (t: number) => this.io.in(room.name).emit('startTimer', t));
 
         for (let i = 0; i < room.questions.length; i++) {
-            if (!checkPlayersReady(room.players, this.gameSessionManager.config.maxPlayers)) {
+            if (!checkPlayersReady(room.players, this.gameSessionsManager.config.maxPlayers)) {
                 this.io.in(room.name).emit('gameOver', 'Player left');
                 break;
             }
@@ -117,7 +117,7 @@ class QuizzerSocketManager {
             room.currentQuestion = room.questions[i];
             this.io.in(room.name).emit('question', room.currentQuestion.question);
             room.isAnswering = true;
-            await countdownEvent(this.gameSessionManager.config.roundTimeout, 1000, (t: number) => this.io.in(room.name).emit('questionTimer', t));
+            await countdownEvent(this.gameSessionsManager.config.roundTimeout, 1000, (t: number) => this.io.in(room.name).emit('questionTimer', t));
             room.isAnswering = false;
         }
     }

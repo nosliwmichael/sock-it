@@ -1,7 +1,7 @@
-import Player from './player.js';
-import Question from './question.js';
+import { Player } from './player.js';
+import { Question } from './question.js';
 
-export default class Room {
+export class Room {
     public name: string;
     public players: Map<string, Player>;
     public questions: Array<Question>;

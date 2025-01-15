@@ -1,4 +1,4 @@
-export default class Player {
+export class Player {
     public id: string;
     public name: string;
     public score: number;

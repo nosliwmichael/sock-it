@@ -1,4 +1,4 @@
-export default class Answer {
+export class Answer {
     private playerID: string;
     private answer1: string;
     private answer2: string;

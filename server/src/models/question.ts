@@ -1,6 +1,6 @@
-import Answer from './answer.js';
+import { Answer } from './answer.js';
 
-export default class Question {
+export class Question {
     public question: string;
     public answers: Map<string, Answer>;
 
