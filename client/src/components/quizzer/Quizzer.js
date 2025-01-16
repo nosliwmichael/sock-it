@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Quizzer.css';
 import { useSocket } from '../context/SocketContext';
+import RoomSelectionScreen from '../room-selection/RoomSelection';
 
 const QuizzerScreen = ({ roomName }) => {
   const [me, setMe] = useState('');
@@ -12,6 +13,7 @@ const QuizzerScreen = ({ roomName }) => {
   const [answerMe, setAnswerMe] = useState('');
   const [answerOpponent, setAnswerOpponent] = useState('');
   const [submitDisabled, setSubmitDisabled] = useState(false);
+  const [isLeaveRoom, setIsLeaveRoom] = useState(false);
 
   const { currentSocket: socket } = useSocket();
 
@@ -23,6 +25,11 @@ const QuizzerScreen = ({ roomName }) => {
       socket.emit('answer', { roomName: roomName.trim(), answers: [answerMe.trim(), answerOpponent.trim()] });
       setSubmitDisabled(true);
     }
+  };
+
+  const leaveRoom = (e) => {
+    socket.emit('leaveRoom');
+    setIsLeaveRoom(true);
   };
 
   useEffect(() => {
@@ -37,9 +44,8 @@ const QuizzerScreen = ({ roomName }) => {
     const handlePlayerUpdate = (players) => {
       setMe(null);
       setOpponent(null);
-      
-      new Map(players).forEach(player => {
-        if (player.id === socket.id) {
+      players.forEach(player => {
+        if (player.id === socket.playerId) {
           setMe(player);
         } else {
           setOpponent(player);
@@ -49,7 +55,7 @@ const QuizzerScreen = ({ roomName }) => {
 
     const handlePlayerLeft = (players) => {
       handlePlayerUpdate(players);
-      resetGame();
+      // resetGame();
     };
 
     const handleStartTimer = (t) => {
@@ -66,20 +72,37 @@ const QuizzerScreen = ({ roomName }) => {
         setQuestionTimer(null);
       }
     };
+
+    const registerEventListeners = () => {
+      socket.on('playerJoined', handlePlayerUpdate);
+      socket.on('playerLeft', handlePlayerLeft);
+      socket.on('playerUpdate', handlePlayerUpdate);
+      socket.on('startTimer', handleStartTimer);
+      socket.on('question', (q) => {
+        setQuestion(q);
+        setSubmitDisabled(false);
+      });
+      socket.on('questionTimer', handleQuestionTimer);
+      socket.on('gameOver', resetGame);
+    }
     
-    socket.on('playerJoined', handlePlayerUpdate);
-    socket.on('playerLeft', handlePlayerLeft);
-    socket.on('playerUpdate', handlePlayerUpdate);
-    socket.on('startTimer', handleStartTimer);
-    socket.on('question', (q) => {
-      setQuestion(q);
-      setSubmitDisabled(false);
+    socket.on('reconnect', (players) => {
+      setMe(null);
+      setOpponent(null);
+      players.forEach(player => {
+        if (player.id === socket.playerId) {
+          setMe(player);
+        } else {
+          setOpponent(player);
+        }
+      });
     });
-    socket.on('questionTimer', handleQuestionTimer);
-    socket.on('gameOver', resetGame);
+
+    registerEventListeners();
 
     // Clean up the event listener when the component unmounts
     return () => {
+      socket.off('reconnect');
       socket.off('playerJoined');
       socket.off('playerLeft');
       socket.off('playerUpdate');
@@ -88,7 +111,11 @@ const QuizzerScreen = ({ roomName }) => {
       socket.off('questionTimer');
       socket.off('gameOver');
     };
-  }, [socket]);
+  }, [socket, roomName]);
+
+  if (isLeaveRoom) {
+    return <RoomSelectionScreen gameMode='Quizzer'/>;
+  }
 
   return (
     <div className="QuizzerScreen">
@@ -146,6 +173,10 @@ const QuizzerScreen = ({ roomName }) => {
           </div>
         </div>
       )}
+
+      <div>
+        <button className='button' onClick={leaveRoom}>Leave Room</button>
+      </div>
 
     </div>
   );

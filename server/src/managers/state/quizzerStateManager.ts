@@ -31,6 +31,10 @@ export class QuizzerStateManager {
         return this.gameState.players.delete(playerId);
     }
 
+    getPlayer(playerId: string): Player | undefined {
+        return this.gameState.players.get(playerId);
+    }
+
     getPlayers(): Player[] {
         return this.gameState.players.values().toArray();
     }
@@ -39,8 +43,9 @@ export class QuizzerStateManager {
         let player = this.gameState.players.get(playerId);
         if (player) {
             player.ready = true;
+            return true;
         }
-        throw new Error("Player does not exist!");
+        return false;
     }
 
     getCurrentQuestion(): Question {

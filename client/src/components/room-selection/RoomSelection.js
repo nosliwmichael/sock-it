@@ -25,8 +25,13 @@ const RoomSelectionScreen = ({ gameMode }) => {
       setIsSubmitted(!isFull);
     });
 
+    socket.on('newPlayerId', (data) => {
+      socket.playerId = data;
+    });
+
     return () => {
-      socket.off('roomFull'); // Clean up the event listener
+      socket.off('roomFull');
+      socket.off('newPlayerId');
     };
   });
 
