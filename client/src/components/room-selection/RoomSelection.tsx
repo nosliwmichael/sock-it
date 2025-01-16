@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./RoomSelection.css";
 import Quizzer from "../quizzer/Quizzer";
 import { useSocket } from "../providers/SocketProvider";
