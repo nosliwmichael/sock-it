@@ -26,6 +26,7 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({
   children,
 }) => {
   const [gameState, setGameState] = useState<GameState>({
+    roomName: "",
     round: 0,
     players: new Map(),
     questions: [],

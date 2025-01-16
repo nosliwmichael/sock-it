@@ -8,9 +8,10 @@ export class QuizzerStateManager {
     private config: GameConfig;
     private gameState: QuizzerGameState;
 
-    constructor(config: GameConfig) {
+    constructor(config: GameConfig, roomName: string) {
         this.config = config;
         this.gameState = {
+            roomName: roomName,
             round: 0,
             players: new Map(),
             questions: [],

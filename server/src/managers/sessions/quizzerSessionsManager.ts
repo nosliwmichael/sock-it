@@ -57,7 +57,7 @@ export class QuizzerSessionsManager {
 
     join(roomName: string, player: Player): boolean {
         if (!this.rooms.has(roomName)) {
-            this.rooms.set(roomName, new QuizzerStateManager(this.config));
+            this.rooms.set(roomName, new QuizzerStateManager(this.config, roomName));
         }
         let room = this.rooms.get(roomName);
         if (room) {

@@ -1,20 +1,22 @@
-import { useState } from 'react';
-import io from 'socket.io-client';
-import './App.css'
-import RoomSelection from './components/room-selection/RoomSelection';
-import { useSocket } from './components/providers/SocketProvider';
-import { v4 as uuidv4 } from 'uuid';
+import { useState } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
+import io from "socket.io-client";
+import "./App.css";
+import RoomSelection from "./components/room-selection/RoomSelection";
+import { useSocket } from "./components/providers/SocketProvider";
+import { v4 as uuidv4 } from "uuid";
+import GameSelection from "./components/game-selection/GameSelection";
+import QuizzerScreen from "./components/quizzer/Quizzer";
 
 const serverURL = process.env.REACT_APP_SOCK_IT_URL;
 const port = 3001;
-const gameModes = new Map()
-  .set('Quizzer', '/quizzer')
-  .set('QuizMe', '/quiz-me');
-const SESSION_ID = 'SESSION_ID';
+const SESSION_ID = "SESSION_ID";
 
 const App = () => {
-  const [selectedGameMode, setSelectedGameMode] = useState<string | null>(null);
-
+  const [selectedGameMode, setSelectedGameMode] = useState<any | undefined>(
+    undefined
+  );
+  const [header, setHeader] = useState<string>("Welcome");
   const { setSocket } = useSocket();
 
   let sessionId = localStorage.getItem(SESSION_ID);
@@ -23,34 +25,45 @@ const App = () => {
     localStorage.setItem(SESSION_ID, sessionId);
   }
 
-  const handleButtonClick = (gameMode: string) => {
-    const path = gameModes.get(gameMode);
-    setSocket(io(`${serverURL}:${port}${path}`, { 
-      forceNew: false,
-      query: {
-        sessionId: sessionId
-      }
-    }));
+  const connectSocket = (gameMode: any) => {
+    setSocket(
+      io(`${serverURL}:${port}${gameMode.path}`, {
+        forceNew: false,
+        query: {
+          sessionId: sessionId,
+        },
+      })
+    );
     setSelectedGameMode(gameMode);
+    console.log("Connected socket to", gameMode.path);
   };
-
-  if (selectedGameMode) {
-    return <RoomSelection gameMode={selectedGameMode}/>;
-  }
 
   return (
     <div className="App">
       <header className="header">
-        <h1>Select A Game Mode</h1>
+        <h1>{header}</h1>
       </header>
-      <div className="button-container">
-        <button className="button" onClick={() => handleButtonClick('Quizzer')}>
-          Quizzer
-        </button>
-        <button className="button" onClick={() => handleButtonClick('QuizMe')}>
-          Quiz Me
-        </button>
-      </div>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <GameSelection
+              setHeader={setHeader}
+              setSelectedGameMode={connectSocket}
+            />
+          }
+        />
+        <Route
+          path="/room-selection"
+          element={
+            <RoomSelection setHeader={setHeader} gameMode={selectedGameMode} />
+          }
+        />
+        <Route
+          path="/quizzer"
+          element={<QuizzerScreen setHeader={setHeader}></QuizzerScreen>}
+        ></Route>
+      </Routes>
     </div>
   );
 };

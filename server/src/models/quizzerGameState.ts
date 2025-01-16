@@ -3,6 +3,7 @@ import { Player } from "./player.js";
 import { Question } from "./question.js";
 
 export interface QuizzerGameState {
+    roomName: string;
     round: number;
     players: Map<string, Player>;
     questions: Question[];

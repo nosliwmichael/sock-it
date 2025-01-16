@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import "./RoomSelection.css";
-import Quizzer from "../quizzer/Quizzer";
 import { useSocket } from "../providers/SocketProvider";
 import { useGameState } from "../providers/GameStateProvider";
+import { useNavigate } from "react-router-dom";
 
 interface RoomSelectionScreenProps {
-  gameMode: string;
+  gameMode?: any;
+  setHeader: (header: string) => void;
 }
 
 const RoomSelectionScreen: React.FC<RoomSelectionScreenProps> = (props) => {
@@ -15,6 +16,18 @@ const RoomSelectionScreen: React.FC<RoomSelectionScreenProps> = (props) => {
 
   const { socket } = useSocket();
   const { gameState, setGameState } = useGameState();
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    props.setHeader("Select a Room");
+
+    if (!props.gameMode) {
+      navigate("/");
+    } else if (isSubmitted) {
+      navigate(props.gameMode?.path);
+    }
+  }, [props, navigate, isSubmitted]);
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,19 +64,8 @@ const RoomSelectionScreen: React.FC<RoomSelectionScreenProps> = (props) => {
     };
   }, [socket, gameState, setGameState]);
 
-  if (isSubmitted) {
-    if (props.gameMode === "Quizzer") {
-      return <Quizzer roomName={roomName} />;
-    } else if (props.gameMode === "QuizMe") {
-      // return <QuizMe roomName={roomName} />;
-    }
-  }
-
   return (
     <div className="RoomSelectionScreen">
-      <header className="header">
-        <h1>Welcome to {props.gameMode}</h1>
-      </header>
       <form onSubmit={onSubmit}>
         <input
           className="input"

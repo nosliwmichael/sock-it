@@ -10,6 +10,7 @@
     "cra-template": "1.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-router-dom": "^7.1.2",
     "socket.io-client": "^4.8.1",
     "typescript": "^5.7.3",
     "uuid": "^11.0.5",
@@ -43,5 +44,8 @@
     "@testing-library/react": "^16.1.0",
     "crypto": "^1.0.1",
     "react-scripts": "^5.0.1"
+  },
+  "overrides": {
+    "typescript": "^5.7.3"
   }
 }

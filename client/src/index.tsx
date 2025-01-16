@@ -4,6 +4,7 @@ import "./index.css";
 import App from "./App";
 import { SocketProvider } from "./components/providers/SocketProvider";
 import { GameStateProvider } from "./components/providers/GameStateProvider";
+import { BrowserRouter } from "react-router-dom";
 
 const rootElement = document.getElementById("root");
 if (!rootElement) {
@@ -13,9 +14,11 @@ const root = ReactDOM.createRoot(rootElement);
 root.render(
   <SocketProvider>
     <GameStateProvider>
-      <React.StrictMode>
-        <App />
-      </React.StrictMode>
+      <BrowserRouter>
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>
+      </BrowserRouter>
     </GameStateProvider>
   </SocketProvider>
 );

@@ -23,6 +23,7 @@ enum EventEmitters {
     SuccessfullyJoinedRoom = 'successfullyJoinedRoom',
     StartTimer = 'startTimer',
     StateChange = 'stateChange',
+    Reconnect = 'reconnect',
 }
 
 export default (io: Server) => {
@@ -65,6 +66,7 @@ class QuizzerSocketManager {
         if (session) {
             console.log(`${session.playerId} reconnected to ${GameName}...`);
             this.joinRoom(socket, session, {});
+            socket.emit(EventEmitters.Reconnect, 'Hello');
             if (this.disconnectTimers.has(session.playerId)) {
                 clearTimeout(this.disconnectTimers.get(session.playerId));
                 this.disconnectTimers.delete(session.playerId);

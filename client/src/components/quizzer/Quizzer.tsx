@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 import "./Quizzer.css";
 import { useSocket } from "../providers/SocketProvider";
-import RoomSelectionScreen from "../room-selection/RoomSelection";
 import { GameState } from "../../models/gameState";
 import { useGameState } from "../providers/GameStateProvider";
 import { Player } from "../../models/player";
+import { useNavigate } from "react-router-dom";
 
 interface QuizzerScreenProps {
-  roomName: string;
+  setHeader: (header: string) => void;
 }
 
-const QuizzerScreen: React.FC<QuizzerScreenProps> = ({ roomName }) => {
+const QuizzerScreen: React.FC<QuizzerScreenProps> = (props) => {
   const { socket } = useSocket();
   const { gameState, setGameState } = useGameState();
   const [me, setMe] = useState<Player | undefined>(undefined);
@@ -19,12 +19,24 @@ const QuizzerScreen: React.FC<QuizzerScreenProps> = ({ roomName }) => {
   const [isGameStarted, setIsGameStarted] = useState<boolean>(false);
   const [isLeaveRoom, setIsLeaveRoom] = useState<boolean>(false);
 
+  const navigate = useNavigate();
+
   const myPlayerId = localStorage.getItem("myPlayerId");
 
   const leaveRoom = (e: React.MouseEvent) => {
     socket.emit("leaveRoom");
     setIsLeaveRoom(true);
   };
+
+  useEffect(() => {
+    props.setHeader(`Quizzer: ${gameState.roomName} Room`);
+  }, [props, gameState]);
+
+  useEffect(() => {
+    if (isLeaveRoom) {
+      navigate("/");
+    }
+  }, [isLeaveRoom, navigate]);
 
   useEffect(() => {
     const handleStateChange = (newGameState: GameState) => {
@@ -60,18 +72,10 @@ const QuizzerScreen: React.FC<QuizzerScreenProps> = ({ roomName }) => {
       socket.off("startTimer");
       socket.off("gameOver");
     };
-  }, [socket, myPlayerId, setGameState, roomName]);
-
-  if (isLeaveRoom) {
-    return <RoomSelectionScreen gameMode="Quizzer" />;
-  }
+  }, [socket, myPlayerId, setGameState, gameState.roomName]);
 
   return (
     <div className="QuizzerScreen">
-      <header className="header">
-        <h1>Quizzer: {roomName} Room</h1>
-      </header>
-
       <div className="scoreboard">
         <table>
           <tbody>
@@ -84,7 +88,9 @@ const QuizzerScreen: React.FC<QuizzerScreenProps> = ({ roomName }) => {
                 ) : (
                   <button
                     className="button"
-                    onClick={() => socket.emit("playerReady", roomName)}
+                    onClick={() =>
+                      socket.emit("playerReady", gameState.roomName)
+                    }
                   >
                     Ready
                   </button>
