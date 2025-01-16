@@ -4,11 +4,9 @@ import { useSocket } from '../context/SocketContext';
 import RoomSelectionScreen from '../room-selection/RoomSelection';
 
 const QuizzerScreen = ({ roomName }) => {
-  const [me, setMe] = useState('');
-  const [opponent, setOpponent] = useState('');
+  const [gameState, setGameState] = useState({});
   const [startTimer, setStartTimer] = useState('');
   const [isGameStarted, setIsGameStarted] = useState(false);
-  const [question, setQuestion] = useState(null);
   const [questionTimer, setQuestionTimer] = useState('');
   const [answerMe, setAnswerMe] = useState('');
   const [answerOpponent, setAnswerOpponent] = useState('');
@@ -34,28 +32,24 @@ const QuizzerScreen = ({ roomName }) => {
 
   useEffect(() => {
     const resetGame = () => {
-      setOpponent('');
       setStartTimer('');
       setIsGameStarted(false);
-      setQuestion('');
       setQuestionTimer('');
     };
 
-    const handlePlayerUpdate = (players) => {
-      setMe(null);
-      setOpponent(null);
-      players.forEach(player => {
+    const handleStateChange = (state) => {
+      console.log('handleStateChange', state);
+      let me, opponent;
+      let players = new Map(state.players);
+      Array.from(players).forEach(player => {
         if (player.id === socket.playerId) {
-          setMe(player);
+          me = player;
         } else {
-          setOpponent(player);
+          opponent = player;
         }
       });
-    };
-
-    const handlePlayerLeft = (players) => {
-      handlePlayerUpdate(players);
-      // resetGame();
+      let newState = {me: me, opponent: opponent, ...state};
+      setGameState(newState);
     };
 
     const handleStartTimer = (t) => {
@@ -73,32 +67,11 @@ const QuizzerScreen = ({ roomName }) => {
       }
     };
 
-    const registerEventListeners = () => {
-      socket.on('playerJoined', handlePlayerUpdate);
-      socket.on('playerLeft', handlePlayerLeft);
-      socket.on('playerUpdate', handlePlayerUpdate);
-      socket.on('startTimer', handleStartTimer);
-      socket.on('question', (q) => {
-        setQuestion(q);
-        setSubmitDisabled(false);
-      });
-      socket.on('questionTimer', handleQuestionTimer);
-      socket.on('gameOver', resetGame);
-    }
-    
-    socket.on('reconnect', (players) => {
-      setMe(null);
-      setOpponent(null);
-      players.forEach(player => {
-        if (player.id === socket.playerId) {
-          setMe(player);
-        } else {
-          setOpponent(player);
-        }
-      });
-    });
-
-    registerEventListeners();
+    socket.on('stateChange', handleStateChange);
+    socket.on('startTimer', handleStartTimer);
+    socket.on('questionTimer', handleQuestionTimer);
+    socket.on('gameOver', resetGame);
+    socket.on('reconnect', handleStateChange);
 
     // Clean up the event listener when the component unmounts
     return () => {
@@ -128,20 +101,20 @@ const QuizzerScreen = ({ roomName }) => {
         <table>
           <tbody>
             <tr>
-              <td>{me?.name}</td>
-              <td>{me?.score}</td>
+              <td>{gameState?.me?.name}</td>
+              <td>{gameState?.me?.score}</td>
               <td>
-                {me?.ready ? 
+                {gameState?.me?.ready ? 
                 <span style={{ color: 'green' }}>✔</span> : 
                 <button className="button" onClick={() => socket.emit('playerReady', roomName)}>Ready</button>}
               </td>
             </tr>
             <tr>
-              <td>{opponent ? opponent.name : <div className="spinner"></div>}</td>
-              <td>{opponent?.score}</td>
+              <td>{gameState?.opponent ? gameState.opponent.name : <div className="spinner"></div>}</td>
+              <td>{gameState?.opponent?.score}</td>
               <td>
                 {
-                  opponent?.ready ? 
+                  gameState.opponent?.ready ? 
                   <span style={{ color: 'green' }}>✔</span> : <div className="spinner"></div>
                 }
               </td>
@@ -156,7 +129,7 @@ const QuizzerScreen = ({ roomName }) => {
         </div>
       )}
 
-      {isGameStarted && (
+      {/* {isGameStarted && (
         <div>
           <div className="question-timer">
             <h2>{questionTimer ? `Question ending in ${questionTimer}...` : "Time's up!"}</h2>
@@ -172,7 +145,7 @@ const QuizzerScreen = ({ roomName }) => {
             </form>
           </div>
         </div>
-      )}
+      )} */}
 
       <div>
         <button className='button' onClick={leaveRoom}>Leave Room</button>

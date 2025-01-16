@@ -19,6 +19,17 @@ export class QuizzerStateManager {
         };
     }
 
+    getState(): any {
+        let state = this.gameState;
+        return {
+            players: Array.from(state.players.entries()),
+            questions: state.questions,
+            answers: Array.from(state.answers.entries()),
+            round: state.round,
+            isAnswering: state.isAnswering
+        };
+    }
+
     join(player: Player): boolean {
         if (this.gameState.players.size === this.config.maxPlayers) {
             return false;

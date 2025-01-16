@@ -2,11 +2,13 @@ import { QuizzerAnswer } from "../../models/answer.js";
 import { GameConfig } from "../../models/gameConfig.js";
 import { Player } from "../../models/player.js";
 import { Question } from "../../models/question.js";
+import { QuizzerGameState } from "../../models/quizzerGameState.js";
 import { QuizzerStateManager } from "../state/quizzerStateManager.js";
 
-interface Session {
+export interface Session {
     playerId: string,
-    roomName?: string
+    roomName: string,
+    sessionId: string,
 }
 
 export class QuizzerSessionsManager {
@@ -20,8 +22,17 @@ export class QuizzerSessionsManager {
         this.sessions = new Map();
     }
 
-    getSession(sessionId: string): Session | undefined {
-        return this.sessions.get(sessionId);
+    getState(roomName: string): QuizzerGameState | undefined {
+        let room = this.rooms.get(roomName);
+        return room ? room.getState() : undefined;
+    }
+
+    getSession(sessionId: string): Session | null {
+        const session = this.sessions.get(sessionId);
+        if (session) {
+            return session;
+        }
+        return null;
     }
 
     getPlayerFromSession(sessionId: string): string | undefined {
@@ -33,7 +44,7 @@ export class QuizzerSessionsManager {
         if (session) {
             session.playerId = playerId;
         } else {
-            this.sessions.set(sessionId, { playerId: playerId });
+            this.sessions.set(sessionId, { playerId: playerId, roomName: '', sessionId: sessionId });
         }
     }
 
@@ -55,13 +66,13 @@ export class QuizzerSessionsManager {
         return false;
     }
 
-    leave(sessionId: string, playerId: string, roomName: string): boolean {
-        const room = this.rooms.get(roomName);
-        if (sessionId) {
-            this.sessions.delete(sessionId);
+    leave(session: Session): boolean {
+        const room = this.rooms.get(session.roomName);
+        if (session.sessionId) {
+            this.sessions.delete(session.sessionId);
         }
-        console.log('Leaving room', roomName);
-        return room ? room.leave(playerId) : false;
+        console.log('Leaving room', session.roomName);
+        return room ? room.leave(session.playerId) : false;
     }
     
     getPlayer(roomName: string, playerId: string): Player | undefined {

@@ -1,8 +1,8 @@
-import 'socket.io';
+// import 'socket.io';
 
-declare module 'socket.io' {
-    interface Socket {
-        playerId: string;
-        roomName: string;
-    }
-}
+// declare module 'socket.io' {
+//     interface Socket {
+//         playerId: string;
+//         roomName: string;
+//     }
+// }
