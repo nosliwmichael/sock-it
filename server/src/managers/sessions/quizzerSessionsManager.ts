@@ -7,7 +7,7 @@ import { QuizzerStateManager } from "../state/quizzerStateManager.js";
 
 export interface Session {
     playerId: string,
-    roomName: string,
+    roomName?: string,
     sessionId: string,
 }
 
@@ -66,13 +66,15 @@ export class QuizzerSessionsManager {
         return false;
     }
 
-    leave(session: Session): boolean {
-        const room = this.rooms.get(session.roomName);
-        if (session.sessionId) {
+    leave(session: Session, isDisconnected: boolean = false): boolean {
+        if (isDisconnected && session.sessionId) {
             this.sessions.delete(session.sessionId);
         }
-        console.log('Leaving room', session.roomName);
-        return room ? room.leave(session.playerId) : false;
+        if (session.roomName) {
+            const room = this.rooms.get(session.roomName);
+            return room ? room.leave(session.playerId) : false;
+        }
+        return false;
     }
     
     getPlayer(roomName: string, playerId: string): Player | undefined {

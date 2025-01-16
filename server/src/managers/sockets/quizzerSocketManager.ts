@@ -2,22 +2,25 @@ import { Namespace, Server, Socket } from 'socket.io';
 import { GameType } from "../../models/gameConfig.js";
 import { QuizzerSessionsManager, Session } from '../sessions/quizzerSessionsManager.js';
 import { randomUUID } from 'crypto';
+import { Player } from '../../models/player.js';
+import { QuizzerGameState } from '../../models/quizzerGameState.js';
+import { send } from 'process';
 
 const GameName = 'Quizzer';
 const SocketNamspace = '/quizzer';
 
 enum EventListeners {
     Connection = 'connection',
-    Reconnect = 'reconnect',
     JoinRoom = 'joinRoom',
     PlayerReady = 'playerReady',
     LeaveRoom = 'leaveRoom',
+    RequestState = 'requestState',
     Disconnect = 'disconnect',
 }
 
 enum EventEmitters {
     NewPlayerId = 'newPlayerId',
-    RoomFull = 'roomFull',
+    SuccessfullyJoinedRoom = 'successfullyJoinedRoom',
     StartTimer = 'startTimer',
     StateChange = 'stateChange',
 }
@@ -49,6 +52,7 @@ class QuizzerSocketManager {
             this.createPlayer(socket);
             this.joinRoomEvent(socket);
             this.playerReadyEvent(socket);
+            this.requestStateEvent(socket);
             this.leaveRoomEvent(socket);
             this.disconnectEvent(socket);
         });
@@ -59,9 +63,7 @@ class QuizzerSocketManager {
         let session = this.gameSessionsManager.getSession(sessionId);
         if (session) {
             console.log(`${session.playerId} reconnected to ${GameName}...`);
-            let state = this.gameSessionsManager.getState(session.roomName);
-            socket.join(session.roomName);
-            socket.emit(EventListeners.Reconnect, state);
+            this.joinRoom(socket, session, {});
             if (this.disconnectTimers.has(session.playerId)) {
                 clearTimeout(this.disconnectTimers.get(session.playerId));
                 this.disconnectTimers.delete(session.playerId);
@@ -76,37 +78,61 @@ class QuizzerSocketManager {
 
     joinRoomEvent(socket: Socket) {
         socket.on(EventListeners.JoinRoom, (data: any) => {
-            const { room: roomName, playerName } = data;
             const session = this.demandSession(socket);
-            this.gameSessionsManager.setRoomToSession(session.sessionId, roomName);
-            let playerJoined = this.gameSessionsManager.join(roomName, {
-                id: session.playerId, name: playerName, score: 0, ready: false
-            });
-            if (playerJoined) {
-                socket.join(roomName);
-                session.roomName = roomName;
-                socket.emit(EventEmitters.RoomFull, false);
-                let state = this.gameSessionsManager.getState(roomName);
-                this.io.in(roomName).emit(EventEmitters.StateChange, JSON.stringify(state));
-                console.log(`Current players in room ${roomName}:`, state?.players);
-            } else {
-                socket.emit(EventEmitters.RoomFull, true);
-            }
+            this.joinRoom(socket, session, data);
         });
+    }
+
+    joinRoom(socket: Socket, session: Session, data: any) {
+        let roomName: string = data.room;
+        let player: Player = {
+            id: session.playerId, name: data.playerName, score: 0, ready: false
+        };
+        if (session.roomName) {
+            console.log('Session already has a room', session.roomName);
+            roomName = session.roomName;
+            let existingPlayer = this.gameSessionsManager.getPlayer(session.roomName, session.playerId);
+            if (existingPlayer) {
+                console.log('Session already has a player', existingPlayer);
+                player = existingPlayer;
+            }
+        }
+        this.gameSessionsManager.setRoomToSession(session.sessionId, roomName);
+        let playerJoined = this.gameSessionsManager.join(roomName, player);
+        if (playerJoined) {
+            socket.join(roomName);
+            session.roomName = roomName;
+            socket.emit(EventEmitters.SuccessfullyJoinedRoom, {
+                isSuccessful: true,
+                roomName: roomName,
+            });
+            let state = this.sendState(session);
+            console.log(`Current players in room ${roomName}:`, state?.players);
+        } else {
+            socket.emit(EventEmitters.SuccessfullyJoinedRoom, {
+                isSuccessful: false,
+                roomName: roomName,
+            });
+        }
     }
 
     playerReadyEvent(socket: Socket) {
         socket.on(EventListeners.PlayerReady, () => {
             const session = this.demandSession(socket);
+            if (!session.roomName) {
+                return;
+            }
             const isPlayerReady = this.gameSessionsManager.setPlayerReady(session.roomName, session.playerId);
             if (isPlayerReady) {
                 console.log(`${session.playerId} is ready!`);
-                const state = this.gameSessionsManager.getState(session.roomName);
-                this.io.in(session.roomName).emit(EventEmitters.StateChange, state);
+                this.sendState(session);
                 if (this.gameSessionsManager.isRoomReady(session.roomName)) {
                     let countdown = 15;
                     const intervalId = setInterval(() => {
-                        this.io.in(session.roomName).emit(EventEmitters.StartTimer, countdown--);
+                        countdown--;
+                        if (session.roomName) {
+                            this.io.in(session.roomName).emit(EventEmitters.StartTimer, countdown);
+                        }
                         if (countdown === 0) {
                             clearInterval(intervalId);
                         }
@@ -114,6 +140,21 @@ class QuizzerSocketManager {
                 }
             }
         });
+    }
+
+    requestStateEvent(socket: Socket) {
+        socket.on(EventListeners.RequestState, () => {
+            const session = this.demandSession(socket);
+            this.sendState(session);
+        });
+    }
+
+    sendState(session: Session): QuizzerGameState | undefined {
+        if (session.roomName) {
+            const state = this.gameSessionsManager.getState(session.roomName);
+            this.io.in(session.roomName).emit(EventEmitters.StateChange, state);
+            return state;
+        }
     }
 
     leaveRoomEvent(socket: Socket) {
@@ -130,18 +171,18 @@ class QuizzerSocketManager {
             console.log(`${session.playerId} has 30 seconds to reconnect...`);
 
             const timerId = setTimeout(() => {
-                this.leaveRoom(session);
+                this.leaveRoom(session, true);
             }, 30000);
             this.disconnectTimers.set(session.playerId, timerId);
         });
     }
 
-    leaveRoom(session: Session) {
-        if (this.gameSessionsManager.leave(session)) {
+    leaveRoom(session: Session, isDisconnected: boolean = false) {
+        if (this.gameSessionsManager.leave(session, isDisconnected)) {
             console.log('Left room', session.roomName, session.playerId);
-            let state = this.gameSessionsManager.getState(session.roomName);
+            let state = this.sendState(session);
             console.log(`Current players in room ${session.roomName}:`, state?.players);
-            this.io.in(session.roomName).emit(EventEmitters.StateChange, state);
+            session.roomName = undefined;
         } else {
             console.log('Failed to leave room', session.roomName);
         }
