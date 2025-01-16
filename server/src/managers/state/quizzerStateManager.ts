@@ -11,23 +11,19 @@ export class QuizzerStateManager {
     constructor(config: GameConfig) {
         this.config = config;
         this.gameState = {
+            round: 0,
             players: new Map(),
             questions: [],
             answers: [],
-            round: 0,
-            isAnswering: false
+            isAnswering: false,
+            startTimer: config.startTimeout,
+            isStarted: false,
+            roundTimer: config.roundTimeout,
         };
     }
 
-    getState(): any {
-        let state = this.gameState;
-        return {
-            players: Array.from(state.players.entries()),
-            questions: state.questions,
-            answers: Array.from(state.answers.entries()),
-            round: state.round,
-            isAnswering: state.isAnswering
-        };
+    getState(): QuizzerGameState {
+        return this.gameState;
     }
 
     join(player: Player): boolean {

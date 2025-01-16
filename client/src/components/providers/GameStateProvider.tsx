@@ -26,11 +26,13 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({
   children,
 }) => {
   const [gameState, setGameState] = useState<GameState>({
+    round: 0,
     players: new Map(),
     questions: [],
     answers: [],
-    round: 0,
     isAnswering: false,
+    startTimer: 15,
+    isStarted: true,
   });
 
   return (

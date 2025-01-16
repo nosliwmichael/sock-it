@@ -3,9 +3,12 @@ import { Player } from "./player.js";
 import { Question } from "./question.js";
 
 export interface QuizzerGameState {
+    round: number;
     players: Map<string, Player>;
     questions: Question[];
     answers: Map<string, QuizzerAnswer>[];
-    round: number;
     isAnswering: boolean;
+    startTimer: number;
+    isStarted: boolean;
+    roundTimer: number;
 }

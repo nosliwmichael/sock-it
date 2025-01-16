@@ -12,7 +12,7 @@ interface QuizzerScreenProps {
 
 const QuizzerScreen: React.FC<QuizzerScreenProps> = ({ roomName }) => {
   const { socket } = useSocket();
-  const { setGameState } = useGameState();
+  const { gameState, setGameState } = useGameState();
   const [me, setMe] = useState<Player | undefined>(undefined);
   const [opponent, setOpponent] = useState<Player | undefined>(undefined);
   const [startTimer, setStartTimer] = useState<number>(15);
@@ -27,20 +27,6 @@ const QuizzerScreen: React.FC<QuizzerScreenProps> = ({ roomName }) => {
   };
 
   useEffect(() => {
-    console.log("Request State");
-    socket.emit("requestState");
-    return () => {
-      console.log("Cleanup Request State");
-      socket.off("requestState");
-    };
-  }, [socket]);
-
-  useEffect(() => {
-    const resetGame = () => {
-      setStartTimer(15);
-      setIsGameStarted(false);
-    };
-
     const handleStateChange = (newGameState: GameState) => {
       newGameState.players = new Map(newGameState.players);
       newGameState.players.forEach((player) => {
@@ -61,9 +47,12 @@ const QuizzerScreen: React.FC<QuizzerScreenProps> = ({ roomName }) => {
       }
     };
 
-    socket.on("stateChange", handleStateChange);
-    socket.on("startTimer", handleStartTimer);
-    socket.on("gameOver", resetGame);
+    if (!socket.hasListeners("stateChange")) {
+      socket.on("stateChange", handleStateChange);
+    }
+    if (!socket.hasListeners("startTimer")) {
+      socket.on("startTimer", handleStartTimer);
+    }
 
     // Clean up the event listener when the component unmounts
     return () => {
@@ -122,7 +111,7 @@ const QuizzerScreen: React.FC<QuizzerScreenProps> = ({ roomName }) => {
       {!isGameStarted && (
         <div className="start-timer">
           <h2>
-            {startTimer
+            {gameState.isStarted && 0 < gameState.startTimer
               ? `Game starting in ${startTimer}...`
               : "Waiting for players..."}
           </h2>

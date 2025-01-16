@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./RoomSelection.css";
 import Quizzer from "../quizzer/Quizzer";
 import { useSocket } from "../providers/SocketProvider";
@@ -27,27 +27,31 @@ const RoomSelectionScreen: React.FC<RoomSelectionScreenProps> = (props) => {
   };
 
   useEffect(() => {
-    socket.on("successfullyJoinedRoom", (data: any) => {
-      if (data["isSuccessful"]) {
-        setIsSubmitted(true);
-        setRoomName(data["roomName"]);
-      } else {
-        alert("Failed to join room");
-      }
-    });
+    if (!socket.hasListeners("successfullyJoinedRoom")) {
+      socket.on("successfullyJoinedRoom", (data: any) => {
+        console.log("successfullyJoinedRoom", data);
+        if (data["isSuccessful"]) {
+          setIsSubmitted(true);
+          setRoomName(data["roomName"]);
+        }
+      });
+    }
 
-    socket.on("newPlayerId", (playerId) => {
-      localStorage.setItem("myPlayerId", playerId);
-      setGameState(gameState);
-    });
+    if (!socket.hasListeners("newPlayerId")) {
+      socket.on("newPlayerId", (playerId) => {
+        console.log("newPlayerId", playerId);
+        localStorage.setItem("myPlayerId", playerId);
+        setGameState(gameState);
+      });
+    }
 
     return () => {
-      socket.off("roomFull");
+      socket.off("successfullyJoinedRoom");
       socket.off("newPlayerId");
     };
-  });
+  }, [socket, gameState, setGameState]);
 
-  if (isSubmitted && roomName) {
+  if (isSubmitted) {
     if (props.gameMode === "Quizzer") {
       return <Quizzer roomName={roomName} />;
     } else if (props.gameMode === "QuizMe") {

@@ -41,7 +41,8 @@ class QuizzerSocketManager {
             gameType: GameType.QUIZZER, 
             maxPlayers: 2, 
             maxRounds: 5, 
-            roundTimeout: 20 
+            roundTimeout: 20,
+            startTimeout: 3,
         });
         this.disconnectTimers = new Map();
         this.registerListeners();
@@ -97,8 +98,11 @@ class QuizzerSocketManager {
                 player = existingPlayer;
             }
         }
-        this.gameSessionsManager.setRoomToSession(session.sessionId, roomName);
-        let playerJoined = this.gameSessionsManager.join(roomName, player);
+        let playerJoined = false;
+        if (roomName) {
+            this.gameSessionsManager.setRoomToSession(session.sessionId, roomName);
+            playerJoined = this.gameSessionsManager.join(roomName, player);
+        }
         if (playerJoined) {
             socket.join(roomName);
             session.roomName = roomName;
@@ -107,7 +111,8 @@ class QuizzerSocketManager {
                 roomName: roomName,
             });
             let state = this.sendState(session);
-            console.log(`Current players in room ${roomName}:`, state?.players);
+            let players = state?.players ? Array.from(state.players).map(p => p[0]) : [];
+            console.log(`Current players in room ${roomName}:`, players);
         } else {
             socket.emit(EventEmitters.SuccessfullyJoinedRoom, {
                 isSuccessful: false,
@@ -152,7 +157,7 @@ class QuizzerSocketManager {
     sendState(session: Session): QuizzerGameState | undefined {
         if (session.roomName) {
             const state = this.gameSessionsManager.getState(session.roomName);
-            this.io.in(session.roomName).emit(EventEmitters.StateChange, state);
+            this.io.in(session.roomName).emit(EventEmitters.StateChange, toSerializableObject(state));
             return state;
         }
     }
@@ -181,7 +186,8 @@ class QuizzerSocketManager {
         if (this.gameSessionsManager.leave(session, isDisconnected)) {
             console.log('Left room', session.roomName, session.playerId);
             let state = this.sendState(session);
-            console.log(`Current players in room ${session.roomName}:`, state?.players);
+            let players = state?.players ? Array.from(state.players).map(p => p[0]) : [];
+            console.log(`Current players in room ${session.roomName}:`, players);
             session.roomName = undefined;
         } else {
             console.log('Failed to leave room', session.roomName);
@@ -200,4 +206,25 @@ class QuizzerSocketManager {
         }
         throw new Error('No session found!');
     }
+}
+
+/**
+ * Some types, such as Maps, are not serializable.
+ * Therefore, it is necessary to convert these types to a serializable data structure before sending it to the client.
+ * A Map of <string, Player> would become an Array of [[string, Player], [string, Player]].
+ * The client can easily convert it back to a Map like this: new Map(mapAsArray)
+ */
+function toSerializableObject(obj: any): any {
+    let serializableObj: any = {};
+    for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            const value = obj[key];
+            if (value instanceof Map) {
+                serializableObj[key] = Array.from(value.entries());
+            } else {
+                serializableObj[key] = value;
+            }
+        }
+    }
+    return serializableObj;
 }

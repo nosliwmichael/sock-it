@@ -9,4 +9,5 @@ export interface GameConfig {
     maxPlayers: number
     maxRounds: number;
     roundTimeout: number;
+    startTimeout: number;
 }
