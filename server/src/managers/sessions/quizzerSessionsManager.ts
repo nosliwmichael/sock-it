@@ -76,12 +76,12 @@ export class QuizzerSessionsManager {
         }
         return false;
     }
-    
+
     getPlayer(roomName: string, playerId: string): Player | undefined {
         let room = this.rooms.get(roomName);
         return room ? room.getPlayer(playerId) : undefined;
     }
-    
+
     getPlayers(roomName: string): Player[] {
         let room = this.rooms.get(roomName);
         return room ? room.getPlayers() : [];
@@ -94,8 +94,8 @@ export class QuizzerSessionsManager {
 
     isRoomReady(roomName: string): boolean {
         let room = this.rooms.get(roomName);
-        return room ? 
-            room.getPlayers().length === this.config.maxPlayers && room.getPlayers().every(p => p.ready) : 
+        return room ?
+            room.getPlayers().length === this.config.maxPlayers && room.getPlayers().every(p => p.ready) :
             false;
     }
 
@@ -122,5 +122,10 @@ export class QuizzerSessionsManager {
     calculatePoints(roomName: string) {
         let room = this.rooms.get(roomName);
         room?.calculatePoints();
+    }
+
+    startGame(roomName: string, callback: Function) {
+        let room = this.rooms.get(roomName);
+        room?.startGame(callback)
     }
 }

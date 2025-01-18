@@ -5,6 +5,7 @@ import App from "./App";
 import { SocketProvider } from "./components/providers/SocketProvider";
 import { GameStateProvider } from "./components/providers/GameStateProvider";
 import { BrowserRouter } from "react-router-dom";
+import { HeaderProvider } from "./components/providers/HeaderProvider";
 
 const rootElement = document.getElementById("root");
 if (!rootElement) {
@@ -12,13 +13,15 @@ if (!rootElement) {
 }
 const root = ReactDOM.createRoot(rootElement);
 root.render(
-  <SocketProvider>
-    <GameStateProvider>
-      <BrowserRouter>
-        <React.StrictMode>
+  <HeaderProvider>
+    <SocketProvider>
+      <GameStateProvider>
+        <BrowserRouter>
+          {/* <React.StrictMode> */}
           <App />
-        </React.StrictMode>
-      </BrowserRouter>
-    </GameStateProvider>
-  </SocketProvider>
+          {/* </React.StrictMode> */}
+        </BrowserRouter>
+      </GameStateProvider>
+    </SocketProvider>
+  </HeaderProvider>
 );

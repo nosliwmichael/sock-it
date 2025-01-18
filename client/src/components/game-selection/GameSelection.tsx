@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useHeader } from "../providers/HeaderProvider";
 
 enum GameMode {
   Quizzer = "Quizzer",
@@ -16,16 +17,16 @@ const GameModeMap = new Map()
   });
 
 interface GameSelectionProps {
-  setHeader: (header: string) => void;
   setSelectedGameMode: (gameMode: any) => void;
 }
 
 const GameSelection: React.FC<GameSelectionProps> = (props) => {
   const navigate = useNavigate();
+  const { setHeader } = useHeader();
 
   useEffect(() => {
-    props.setHeader("Select a Game");
-  }, [props]);
+    setHeader("Select a Game");
+  }, []);
 
   const handleButtonClick = (gameMode: string) => {
     props.setSelectedGameMode(GameModeMap.get(gameMode));

@@ -92,4 +92,16 @@ export class QuizzerStateManager {
             }
         });
     }
+
+    startGame(callback: Function) {
+        this.gameState.startTimer = this.config.startTimeout + 1;
+        this.gameState.isStarted = true;
+        const intervalId = setInterval(() => {
+            this.gameState.startTimer--;
+            callback();
+            if (this.gameState.startTimer === 0) {
+                clearInterval(intervalId);
+            }
+        }, 1000);
+    }
 }

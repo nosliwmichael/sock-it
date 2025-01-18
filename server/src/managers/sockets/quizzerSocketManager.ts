@@ -4,7 +4,6 @@ import { QuizzerSessionsManager, Session } from '../sessions/quizzerSessionsMana
 import { randomUUID } from 'crypto';
 import { Player } from '../../models/player.js';
 import { QuizzerGameState } from '../../models/quizzerGameState.js';
-import { send } from 'process';
 
 const GameName = 'Quizzer';
 const SocketNamspace = '/quizzer';
@@ -23,7 +22,6 @@ enum EventEmitters {
     SuccessfullyJoinedRoom = 'successfullyJoinedRoom',
     StartTimer = 'startTimer',
     StateChange = 'stateChange',
-    Reconnect = 'reconnect',
 }
 
 export default (io: Server) => {
@@ -38,10 +36,10 @@ class QuizzerSocketManager {
     constructor(io: Server) {
         this.io = io.of(SocketNamspace);
         this.gameSessionsManager = new QuizzerSessionsManager({
-            name: GameName, 
-            gameType: GameType.QUIZZER, 
-            maxPlayers: 2, 
-            maxRounds: 5, 
+            name: GameName,
+            gameType: GameType.QUIZZER,
+            maxPlayers: 2,
+            maxRounds: 5,
             roundTimeout: 20,
             startTimeout: 3,
         });
@@ -66,7 +64,6 @@ class QuizzerSocketManager {
         if (session) {
             console.log(`${session.playerId} reconnected to ${GameName}...`);
             this.joinRoom(socket, session, {});
-            socket.emit(EventEmitters.Reconnect, 'Hello');
             if (this.disconnectTimers.has(session.playerId)) {
                 clearTimeout(this.disconnectTimers.get(session.playerId));
                 this.disconnectTimers.delete(session.playerId);
@@ -134,16 +131,9 @@ class QuizzerSocketManager {
                 console.log(`${session.playerId} is ready!`);
                 this.sendState(session);
                 if (this.gameSessionsManager.isRoomReady(session.roomName)) {
-                    let countdown = 15;
-                    const intervalId = setInterval(() => {
-                        countdown--;
-                        if (session.roomName) {
-                            this.io.in(session.roomName).emit(EventEmitters.StartTimer, countdown);
-                        }
-                        if (countdown === 0) {
-                            clearInterval(intervalId);
-                        }
-                    }, 1000);
+                    this.gameSessionsManager.startGame(session.roomName, () => {
+                        this.sendState(session);
+                    });
                 }
             }
         });

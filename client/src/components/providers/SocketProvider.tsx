@@ -24,9 +24,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = (props) => {
   const [socket, setSocket] = useState<Socket>(io());
 
   useEffect(() => {
-    socket.on("reconnect", console.log);
     return () => {
-      socket.off("reconnect");
       socket.disconnect();
     };
   }, [socket]);

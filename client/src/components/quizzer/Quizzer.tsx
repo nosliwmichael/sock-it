@@ -1,22 +1,20 @@
 import React, { useState, useEffect } from "react";
 import "./Quizzer.css";
 import { useSocket } from "../providers/SocketProvider";
-import { GameState } from "../../models/gameState";
 import { useGameState } from "../providers/GameStateProvider";
 import { Player } from "../../models/player";
 import { useNavigate } from "react-router-dom";
+import { useHeader } from "../providers/HeaderProvider";
 
 interface QuizzerScreenProps {
-  setHeader: (header: string) => void;
 }
 
 const QuizzerScreen: React.FC<QuizzerScreenProps> = (props) => {
   const { socket } = useSocket();
   const { gameState, setGameState } = useGameState();
+  const { setHeader } = useHeader();
   const [me, setMe] = useState<Player | undefined>(undefined);
   const [opponent, setOpponent] = useState<Player | undefined>(undefined);
-  const [startTimer, setStartTimer] = useState<number>(15);
-  const [isGameStarted, setIsGameStarted] = useState<boolean>(false);
   const [isLeaveRoom, setIsLeaveRoom] = useState<boolean>(false);
 
   const navigate = useNavigate();
@@ -26,11 +24,12 @@ const QuizzerScreen: React.FC<QuizzerScreenProps> = (props) => {
   const leaveRoom = (e: React.MouseEvent) => {
     socket.emit("leaveRoom");
     setIsLeaveRoom(true);
+    setGameState(undefined);
   };
 
   useEffect(() => {
-    props.setHeader(`Quizzer: ${gameState.roomName} Room`);
-  }, [props, gameState]);
+    setHeader(`Quizzer: ${gameState?.roomName} Room`);
+  }, [gameState]);
 
   useEffect(() => {
     if (isLeaveRoom) {
@@ -39,40 +38,33 @@ const QuizzerScreen: React.FC<QuizzerScreenProps> = (props) => {
   }, [isLeaveRoom, navigate]);
 
   useEffect(() => {
-    const handleStateChange = (newGameState: GameState) => {
-      newGameState.players = new Map(newGameState.players);
-      newGameState.players.forEach((player) => {
-        if (player.id === myPlayerId) {
-          setMe(player);
+    setMe(undefined);
+    setOpponent(undefined);
+    if (myPlayerId) {
+      gameState?.players.forEach((v, k) => {
+        if (k === myPlayerId) {
+          setMe(v);
         } else {
-          setOpponent(player);
+          setOpponent(v);
         }
       });
-      console.log("newGameState", newGameState);
-      setGameState(newGameState);
-    };
+    }
+  }, [gameState]);
 
-    const handleStartTimer = (t: number) => {
-      setStartTimer(t);
-      if (0 === t) {
-        setIsGameStarted(true);
-      }
-    };
-
+  useEffect(() => {
     if (!socket.hasListeners("stateChange")) {
-      socket.on("stateChange", handleStateChange);
+      socket.on("stateChange", setGameState);
     }
-    if (!socket.hasListeners("startTimer")) {
-      socket.on("startTimer", handleStartTimer);
-    }
-
-    // Clean up the event listener when the component unmounts
     return () => {
       socket.off("stateChange");
-      socket.off("startTimer");
-      socket.off("gameOver");
     };
-  }, [socket, myPlayerId, setGameState, gameState.roomName]);
+  }, [socket]);
+
+  useEffect(() => {
+    if (socket) {
+      socket.emit('requestState');
+    }
+  }, [socket]);
 
   return (
     <div className="QuizzerScreen">
@@ -89,7 +81,7 @@ const QuizzerScreen: React.FC<QuizzerScreenProps> = (props) => {
                   <button
                     className="button"
                     onClick={() =>
-                      socket.emit("playerReady", gameState.roomName)
+                      socket.emit("playerReady", gameState?.roomName)
                     }
                   >
                     Ready
@@ -114,33 +106,35 @@ const QuizzerScreen: React.FC<QuizzerScreenProps> = (props) => {
         </table>
       </div>
 
-      {!isGameStarted && (
-        <div className="start-timer">
-          <h2>
-            {gameState.isStarted && 0 < gameState.startTimer
-              ? `Game starting in ${startTimer}...`
-              : "Waiting for players..."}
-          </h2>
+      {!gameState?.isStarted && (
+        <div>
+          <h2>Waiting on players...</h2>
         </div>
       )}
 
-      {/* {isGameStarted && (
+      {gameState?.isStarted && 0 < gameState.startTimer && (
+        <div className="start-timer">
+          <h2>Game starting in {gameState.startTimer}...</h2>
+        </div>
+      )}
+
+      {gameState?.isStarted && 0 === gameState.startTimer && (
         <div>
           <div className="question-timer">
-            <h2>{questionTimer ? `Question ending in ${questionTimer}...` : "Time's up!"}</h2>
+            <h2>{gameState.roundTimer > 0 ? `Question ending in ${gameState.roundTimer}...` : "Time's up!"}</h2>
           </div>
           <div className="question">
-            <h2>{question ? question : ''}</h2>
+            <h2>{gameState.round > 0 ? gameState.questions[gameState.round].question : ''}</h2>
           </div>
-          <div className="answer">
+          {/* <div className="answer">
             <form onSubmit={onSubmitAnswer}>
-              <input type="text" onChange={(e) => setAnswerMe(e.target.value)} placeholder="Answer for you..." className="input"/>
-              <input type="text" onChange={(e) => setAnswerOpponent(e.target.value)} placeholder="Answer for opponent..." className="input"/>
+              <input type="text" onChange={(e) => setAnswerMe(e.target.value)} placeholder="Answer for you..." className="input" />
+              <input type="text" onChange={(e) => setAnswerOpponent(e.target.value)} placeholder="Answer for opponent..." className="input" />
               <button className="button" type="submit" disabled={submitDisabled}>Submit</button>
             </form>
-          </div>
+          </div> */}
         </div>
-      )} */}
+      )}
 
       <div>
         <button className="button" onClick={leaveRoom}>

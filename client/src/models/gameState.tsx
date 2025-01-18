@@ -11,4 +11,5 @@ export interface GameState {
   isAnswering: boolean;
   startTimer: number;
   isStarted: boolean;
+  roundTimer: number;
 }

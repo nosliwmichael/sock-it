@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import io from "socket.io-client";
 import "./App.css";
@@ -7,6 +7,7 @@ import { useSocket } from "./components/providers/SocketProvider";
 import { v4 as uuidv4 } from "uuid";
 import GameSelection from "./components/game-selection/GameSelection";
 import QuizzerScreen from "./components/quizzer/Quizzer";
+import { useHeader } from "./components/providers/HeaderProvider";
 
 const serverURL = process.env.REACT_APP_SOCK_IT_URL;
 const port = 3001;
@@ -16,27 +17,34 @@ const App = () => {
   const [selectedGameMode, setSelectedGameMode] = useState<any | undefined>(
     undefined
   );
-  const [header, setHeader] = useState<string>("Welcome");
+  const { header } = useHeader();
+  const [socketConnectionPath, setSocketConnectionPath] = useState<string | undefined>();
+  const [sessionId, setSessionId] = useState<string | null>(localStorage.getItem(SESSION_ID));
   const { setSocket } = useSocket();
 
-  let sessionId = localStorage.getItem(SESSION_ID);
   if (!sessionId) {
-    sessionId = uuidv4();
-    localStorage.setItem(SESSION_ID, sessionId);
+    const newSessionId = uuidv4();
+    setSessionId(newSessionId);
+    localStorage.setItem(SESSION_ID, newSessionId);
   }
 
-  const connectSocket = (gameMode: any) => {
-    setSocket(
-      io(`${serverURL}:${port}${gameMode.path}`, {
+  const selectGame = (gameMode: any) => {
+    setSelectedGameMode(gameMode);
+    setSocketConnectionPath(gameMode.path);
+  }
+
+  useEffect(() => {
+    if (socketConnectionPath?.trim().length) {
+      const socketConnectionUrl = `${serverURL}:${port}${socketConnectionPath}`;
+      console.log('Connecting to...', socketConnectionUrl);
+      setSocket(io(socketConnectionUrl, {
         forceNew: false,
         query: {
           sessionId: sessionId,
         },
-      })
-    );
-    setSelectedGameMode(gameMode);
-    console.log("Connected socket to", gameMode.path);
-  };
+      }));
+    }
+  }, [socketConnectionPath]);
 
   return (
     <div className="App">
@@ -48,20 +56,19 @@ const App = () => {
           path="/"
           element={
             <GameSelection
-              setHeader={setHeader}
-              setSelectedGameMode={connectSocket}
+              setSelectedGameMode={selectGame}
             />
           }
         />
         <Route
           path="/room-selection"
           element={
-            <RoomSelection setHeader={setHeader} gameMode={selectedGameMode} />
+            <RoomSelection gameMode={selectedGameMode} />
           }
         />
         <Route
           path="/quizzer"
-          element={<QuizzerScreen setHeader={setHeader}></QuizzerScreen>}
+          element={<QuizzerScreen></QuizzerScreen>}
         ></Route>
       </Routes>
     </div>

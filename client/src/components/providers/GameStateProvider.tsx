@@ -2,8 +2,8 @@ import React, { createContext, useContext, useState } from "react";
 import { GameState } from "../../models/gameState";
 
 interface GameStateContextProps {
-  gameState: GameState;
-  setGameState: (gameState: GameState) => void;
+  gameState: GameState | undefined;
+  setGameState: (gameState: GameState | undefined) => void;
 }
 
 interface GameStateProviderProps {
@@ -25,19 +25,17 @@ export const useGameState = (): GameStateContextProps => {
 export const GameStateProvider: React.FC<GameStateProviderProps> = ({
   children,
 }) => {
-  const [gameState, setGameState] = useState<GameState>({
-    roomName: "",
-    round: 0,
-    players: new Map(),
-    questions: [],
-    answers: [],
-    isAnswering: false,
-    startTimer: 15,
-    isStarted: true,
-  });
+  const [gameState, setGameState] = useState<GameState | undefined>(undefined);
+
+  const setConvertedGameState = (state: GameState | undefined) => {
+    if (state) {
+      state.players = new Map(state.players);
+    }
+    setGameState(state);
+  };
 
   return (
-    <GameStateContext.Provider value={{ gameState, setGameState }}>
+    <GameStateContext.Provider value={{ gameState, setGameState: setConvertedGameState }}>
       {children}
     </GameStateContext.Provider>
   );

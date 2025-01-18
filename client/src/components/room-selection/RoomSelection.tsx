@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import "./RoomSelection.css";
 import { useSocket } from "../providers/SocketProvider";
-import { useGameState } from "../providers/GameStateProvider";
 import { useNavigate } from "react-router-dom";
+import { useHeader } from "../providers/HeaderProvider";
+import { useGameState } from "../providers/GameStateProvider";
 
 interface RoomSelectionScreenProps {
   gameMode?: any;
-  setHeader: (header: string) => void;
 }
 
 const RoomSelectionScreen: React.FC<RoomSelectionScreenProps> = (props) => {
@@ -15,19 +15,22 @@ const RoomSelectionScreen: React.FC<RoomSelectionScreenProps> = (props) => {
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const { socket } = useSocket();
-  const { gameState, setGameState } = useGameState();
+  const { setHeader } = useHeader();
+  const { gameState } = useGameState();
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    props.setHeader("Select a Room");
+    setHeader('Select a Room');
+  }, []);
 
+  useEffect(() => {
     if (!props.gameMode) {
       navigate("/");
-    } else if (isSubmitted) {
+    } else if (isSubmitted || gameState?.roomName) {
       navigate(props.gameMode?.path);
     }
-  }, [props, navigate, isSubmitted]);
+  }, [isSubmitted, gameState]);
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +45,6 @@ const RoomSelectionScreen: React.FC<RoomSelectionScreenProps> = (props) => {
   useEffect(() => {
     if (!socket.hasListeners("successfullyJoinedRoom")) {
       socket.on("successfullyJoinedRoom", (data: any) => {
-        console.log("successfullyJoinedRoom", data);
         if (data["isSuccessful"]) {
           setIsSubmitted(true);
           setRoomName(data["roomName"]);
@@ -52,9 +54,7 @@ const RoomSelectionScreen: React.FC<RoomSelectionScreenProps> = (props) => {
 
     if (!socket.hasListeners("newPlayerId")) {
       socket.on("newPlayerId", (playerId) => {
-        console.log("newPlayerId", playerId);
         localStorage.setItem("myPlayerId", playerId);
-        setGameState(gameState);
       });
     }
 
@@ -62,7 +62,7 @@ const RoomSelectionScreen: React.FC<RoomSelectionScreenProps> = (props) => {
       socket.off("successfullyJoinedRoom");
       socket.off("newPlayerId");
     };
-  }, [socket, gameState, setGameState]);
+  }, [socket]);
 
   return (
     <div className="RoomSelectionScreen">
