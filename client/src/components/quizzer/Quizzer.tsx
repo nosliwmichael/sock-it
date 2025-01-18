@@ -5,6 +5,7 @@ import { useGameState } from "../providers/GameStateProvider";
 import { Player } from "../../models/player";
 import { useNavigate } from "react-router-dom";
 import { useHeader } from "../providers/HeaderProvider";
+import { QuizzerAnswer } from "../../models/answer";
 
 interface QuizzerScreenProps {
 }
@@ -15,11 +16,32 @@ const QuizzerScreen: React.FC<QuizzerScreenProps> = (props) => {
   const { setHeader } = useHeader();
   const [me, setMe] = useState<Player | undefined>(undefined);
   const [opponent, setOpponent] = useState<Player | undefined>(undefined);
+  const [answerForm, setAnswerForm] = useState({
+    answer: '',
+    opponentAnswer: ''
+  });
   const [isLeaveRoom, setIsLeaveRoom] = useState<boolean>(false);
 
   const navigate = useNavigate();
 
   const myPlayerId = localStorage.getItem("myPlayerId");
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setAnswerForm(prevState => ({
+      ...prevState,
+      [name]: value
+    }));
+  };
+
+  const submitAnswer = (e: React.FormEvent) => {
+    e.preventDefault();
+    let answer = {
+      answer: answerForm.opponentAnswer,
+      myAnswer: answerForm.answer,
+    }
+    socket.emit('answerQuestion', answer);
+  };
 
   const leaveRoom = (e: React.MouseEvent) => {
     socket.emit("leaveRoom");
@@ -106,19 +128,19 @@ const QuizzerScreen: React.FC<QuizzerScreenProps> = (props) => {
         </table>
       </div>
 
-      {!gameState?.isStarted && (
+      {!gameState?.isGameStarted && (
         <div>
           <h2>Waiting on players...</h2>
         </div>
       )}
 
-      {gameState?.isStarted && 0 < gameState.startTimer && (
+      {gameState?.isGameStarted && 0 < gameState.startTimer && (
         <div className="start-timer">
           <h2>Game starting in {gameState.startTimer}...</h2>
         </div>
       )}
 
-      {gameState?.isStarted && 0 === gameState.startTimer && (
+      {gameState?.isGameStarted && 0 === gameState.startTimer && (
         <div>
           <div className="question-timer">
             <h2>{gameState.roundTimer > 0 ? `Question ending in ${gameState.roundTimer}...` : "Time's up!"}</h2>
@@ -126,13 +148,25 @@ const QuizzerScreen: React.FC<QuizzerScreenProps> = (props) => {
           <div className="question">
             <h2>{gameState.round > 0 ? gameState.questions[gameState.round].question : ''}</h2>
           </div>
-          {/* <div className="answer">
-            <form onSubmit={onSubmitAnswer}>
-              <input type="text" onChange={(e) => setAnswerMe(e.target.value)} placeholder="Answer for you..." className="input" />
-              <input type="text" onChange={(e) => setAnswerOpponent(e.target.value)} placeholder="Answer for opponent..." className="input" />
-              <button className="button" type="submit" disabled={submitDisabled}>Submit</button>
+          <div className="answer">
+            <form onSubmit={submitAnswer}>
+              <input
+                type="text"
+                name="answer"
+                value={answerForm.answer}
+                onChange={handleInputChange}
+                placeholder="Your answer to the question..."
+                className="input" />
+              <input
+                type="text"
+                name="opponentAnswer"
+                value={answerForm.opponentAnswer}
+                onChange={handleInputChange}
+                placeholder="Guess your opponent's answer..."
+                className="input" />
+              <button className="button" type="submit" disabled={!gameState.isAnswering}>Submit</button>
             </form>
-          </div> */}
+          </div>
         </div>
       )}
 
