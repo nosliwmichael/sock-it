@@ -1,4 +1,5 @@
 export interface Answer {
+    id: string;
     playerId: string;
     answer: string;
     correct: boolean;

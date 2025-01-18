@@ -7,9 +7,11 @@ export interface QuizzerGameState {
     round: number;
     players: Map<string, Player>;
     questions: Question[];
-    answers: Map<string, QuizzerAnswer>[];
+    // Map<Question ID, Map<Player ID, Answer>>
+    answers: Map<string, Map<string, QuizzerAnswer>>;
     isAnswering: boolean;
     startTimer: number;
-    isStarted: boolean;
+    isGameStarted: boolean;
     roundTimer: number;
+    isRoundStarted: boolean;
 }

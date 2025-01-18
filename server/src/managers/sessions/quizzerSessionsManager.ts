@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { QuizzerAnswer } from "../../models/answer.js";
 import { GameConfig } from "../../models/gameConfig.js";
 import { Player } from "../../models/player.js";
@@ -94,29 +95,26 @@ export class QuizzerSessionsManager {
 
     isRoomReady(roomName: string): boolean {
         let room = this.rooms.get(roomName);
-        return room ?
-            room.getPlayers().length === this.config.maxPlayers && room.getPlayers().every(p => p.ready) :
-            false;
+        return room ? room.isRoomReady() : false;
     }
 
-    getCurrentQuestion(roomName: string): Question | null {
-        let room = this.rooms.get(roomName);
-        return room ? room.getCurrentQuestion() : null;
+    answerQuestion(sessionId: string, answer: QuizzerAnswer) {
+        let session = this.sessions.get(sessionId);
+        if (session?.roomName) {
+            answer.id = randomUUID();
+            answer.playerId = session?.playerId;
+            answer.correct = false;
+            let room = this.rooms.get(session.roomName);
+            room?.answerQuestion(answer);
+        }
     }
 
-    getNextQuestion(roomName: string): Question | null {
-        let room = this.rooms.get(roomName);
-        return room ? room.getNextQuestion() : null;
-    }
-
-    answerQuestion(roomName: string, answer: QuizzerAnswer) {
-        let room = this.rooms.get(roomName);
-        room?.answerQuestion(answer);
-    }
-
-    markAnswerCorrect(roomName: string, playerId: string) {
-        let room = this.rooms.get(roomName);
-        room?.markAnswerCorrect(playerId);
+    markAnswerCorrect(sessionId: string, playerId: string) {
+        let session = this.sessions.get(sessionId);
+        if (session?.playerId !== playerId && session?.roomName) {
+            let room = this.rooms.get(session.roomName);
+            room?.markAnswerCorrect(playerId);
+        }
     }
 
     calculatePoints(roomName: string) {
@@ -124,8 +122,8 @@ export class QuizzerSessionsManager {
         room?.calculatePoints();
     }
 
-    startGame(roomName: string, callback: Function) {
+    start(roomName: string, callback: Function) {
         let room = this.rooms.get(roomName);
-        room?.startGame(callback)
+        room?.start(callback)
     }
 }

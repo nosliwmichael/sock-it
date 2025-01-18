@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { QuizzerAnswer } from "../../models/answer.js";
 import { GameConfig } from "../../models/gameConfig.js";
 import { Player } from "../../models/player.js";
@@ -14,12 +15,19 @@ export class QuizzerStateManager {
             roomName: roomName,
             round: 0,
             players: new Map(),
-            questions: [],
-            answers: [],
+            questions: [
+                { id: randomUUID(), question: 'What is the capital of Texas?' },
+                { id: randomUUID(), question: 'What is the capital of France?' },
+                { id: randomUUID(), question: 'What is the capital of Denmark?' },
+                { id: randomUUID(), question: 'What is the capital of Australia?' },
+                { id: randomUUID(), question: 'What is the capital of Japan?' },
+            ],
+            answers: new Map(),
             isAnswering: false,
             startTimer: config.startTimeout,
-            isStarted: false,
+            isGameStarted: false,
             roundTimer: config.roundTimeout,
+            isRoundStarted: false,
         };
     }
 
@@ -56,52 +64,109 @@ export class QuizzerStateManager {
         return false;
     }
 
-    getCurrentQuestion(): Question {
-        return this.gameState.questions[this.gameState.round];
-    }
-
-    getNextQuestion(): Question {
-        this.gameState.round++;
-        return this.gameState.questions[this.gameState.round];
-    }
-
     answerQuestion(answer: QuizzerAnswer) {
-        let roundAnswers = this.gameState.answers[this.gameState.round];
-        if (!roundAnswers) {
+        if (!this.gameState.isAnswering) {
+            return;
+        }
+        let question = this.gameState.questions[this.gameState.round];
+        let roundAnswers = this.gameState.answers.get(question.id);
+        if (!roundAnswers?.size) {
             roundAnswers = new Map();
-            this.gameState.answers[this.gameState.round] = roundAnswers;
+            this.gameState.answers.set(question.id, roundAnswers);
         }
         roundAnswers.set(answer.playerId, answer);
     }
 
     markAnswerCorrect(playerId: string) {
-        let roundAnswers = this.gameState.answers[this.gameState.round];
+        let question = this.gameState.questions[this.gameState.round];
+        let roundAnswers = this.gameState.answers.get(question.id);
         let answer = roundAnswers?.get(playerId);
-        if (!answer) {
-            throw new Error("There are no answers for this round!");
+        if (answer) {
+            answer.correct = true;
         }
-        answer.correct = true;
     }
 
     calculatePoints() {
-        this.gameState.players.forEach((player, id) => {
+        this.gameState.players.forEach((player, playerId) => {
             player.score = 0;
-            let roundAnswers = this.gameState.answers[this.gameState.round];
-            if (roundAnswers.get(id)?.correct) {
-                player.score += 1;
+            for (let i = 0; i < this.gameState.round; i++) {
+                let question = this.gameState.questions[i];
+                let answer = this.gameState.answers.get(question.id)?.get(playerId);
+                if (answer?.correct) {
+                    player.score++;
+                }
             }
         });
     }
 
-    startGame(callback: Function) {
+    isRoomReady(): boolean {
+        return this.hasMaxPlayers() && this.arePlayersReady();
+    }
+
+    private hasMaxPlayers(): boolean {
+        return this.getPlayers().length === this.config.maxPlayers;
+    }
+
+    private arePlayersReady(): boolean {
+        return this.getPlayers().every(p => p.ready);
+    }
+
+    start(callback: Function) {
+        if (!this.gameState.isGameStarted) {
+            this.startGame(callback);
+        }
+        else if (this.gameState.isRoundStarted && this.gameState.round < this.config.maxRounds) {
+
+            this.startRound(callback);
+        }
+    }
+
+    private startGame(callback: Function) {
         this.gameState.startTimer = this.config.startTimeout + 1;
-        this.gameState.isStarted = true;
+        this.gameState.isGameStarted = true;
         const intervalId = setInterval(() => {
             this.gameState.startTimer--;
             callback();
             if (this.gameState.startTimer === 0) {
                 clearInterval(intervalId);
+                this.startRound(callback);
+            }
+            if (!this.isRoomReady()) {
+                clearInterval(intervalId);
+                this.resetGame(callback);
             }
         }, 1000);
+    }
+
+    private startRound(callback: Function) {
+        this.gameState.roundTimer = this.config.roundTimeout + 1;
+        this.gameState.isRoundStarted = true;
+        this.gameState.isAnswering = true;
+        this.gameState.round++;
+        const intervalId = setInterval(() => {
+            this.gameState.roundTimer--;
+            if (this.gameState.roundTimer === 0) {
+                clearInterval(intervalId);
+                this.gameState.isRoundStarted = false;
+                this.gameState.isAnswering = false;
+                this.calculatePoints();
+            }
+            callback();
+            if (!this.hasMaxPlayers()) {
+                clearInterval(intervalId);
+                this.resetGame(callback);
+            }
+        }, 1000);
+    }
+
+    resetGame(callback: Function) {
+        this.gameState.isGameStarted = false;
+        this.gameState.isRoundStarted = false;
+        this.gameState.isAnswering = false;
+        this.gameState.startTimer = this.config.startTimeout;
+        this.gameState.roundTimer = this.config.roundTimeout;
+        this.gameState.round = 0;
+        this.gameState.players.forEach(p => p.score = 0);
+        callback();
     }
 }

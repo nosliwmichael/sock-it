@@ -4,6 +4,7 @@ import { QuizzerSessionsManager, Session } from '../sessions/quizzerSessionsMana
 import { randomUUID } from 'crypto';
 import { Player } from '../../models/player.js';
 import { QuizzerGameState } from '../../models/quizzerGameState.js';
+import { QuizzerAnswer } from '../../models/answer.js';
 
 const GameName = 'Quizzer';
 const SocketNamspace = '/quizzer';
@@ -12,6 +13,8 @@ enum EventListeners {
     Connection = 'connection',
     JoinRoom = 'joinRoom',
     PlayerReady = 'playerReady',
+    AnswerQuestion = 'answerQuestion',
+    GradeQuestion = 'gradeQuestion',
     LeaveRoom = 'leaveRoom',
     RequestState = 'requestState',
     Disconnect = 'disconnect',
@@ -20,7 +23,6 @@ enum EventListeners {
 enum EventEmitters {
     NewPlayerId = 'newPlayerId',
     SuccessfullyJoinedRoom = 'successfullyJoinedRoom',
-    StartTimer = 'startTimer',
     StateChange = 'stateChange',
 }
 
@@ -38,7 +40,7 @@ class QuizzerSocketManager {
         this.gameSessionsManager = new QuizzerSessionsManager({
             name: GameName,
             gameType: GameType.QUIZZER,
-            maxPlayers: 2,
+            maxPlayers: 1,
             maxRounds: 5,
             roundTimeout: 20,
             startTimeout: 3,
@@ -52,6 +54,8 @@ class QuizzerSocketManager {
             this.createPlayer(socket);
             this.joinRoomEvent(socket);
             this.playerReadyEvent(socket);
+            this.answerQuestionEvent(socket);
+            this.gradeQuestionEvent(socket);
             this.requestStateEvent(socket);
             this.leaveRoomEvent(socket);
             this.disconnectEvent(socket);
@@ -131,11 +135,25 @@ class QuizzerSocketManager {
                 console.log(`${session.playerId} is ready!`);
                 this.sendState(session);
                 if (this.gameSessionsManager.isRoomReady(session.roomName)) {
-                    this.gameSessionsManager.startGame(session.roomName, () => {
+                    this.gameSessionsManager.start(session.roomName, () => {
                         this.sendState(session);
                     });
                 }
             }
+        });
+    }
+
+    answerQuestionEvent(socket: Socket) {
+        socket.on(EventListeners.AnswerQuestion, (answer: QuizzerAnswer) => {
+            const session = this.demandSession(socket);
+            this.gameSessionsManager.answerQuestion(session.sessionId, answer);
+        });
+    }
+
+    gradeQuestionEvent(socket: Socket) {
+        socket.on(EventListeners.GradeQuestion, (playerId: string) => {
+            const session = this.demandSession(socket);
+            this.gameSessionsManager.markAnswerCorrect(session.sessionId, playerId);
         });
     }
 
