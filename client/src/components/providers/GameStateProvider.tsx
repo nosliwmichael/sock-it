@@ -27,9 +27,10 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({
 }) => {
   const [gameState, setGameState] = useState<GameState | undefined>(undefined);
 
-  const setConvertedGameState = (state: GameState | undefined) => {
+  const setConvertedGameState = (state: any | undefined) => {
     if (state) {
       state.players = new Map(state.players);
+      state.answers = new Map(state.answers.map((a: any) => [a[0], new Map(a[1])]));
     }
     setGameState(state);
   };

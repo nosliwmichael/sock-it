@@ -14,7 +14,7 @@ enum EventListeners {
     JoinRoom = 'joinRoom',
     PlayerReady = 'playerReady',
     AnswerQuestion = 'answerQuestion',
-    GradeQuestion = 'gradeQuestion',
+    ApproveAnswer = 'approveAnswer',
     LeaveRoom = 'leaveRoom',
     RequestState = 'requestState',
     Disconnect = 'disconnect',
@@ -40,7 +40,7 @@ class QuizzerSocketManager {
         this.gameSessionsManager = new QuizzerSessionsManager({
             name: GameName,
             gameType: GameType.QUIZZER,
-            maxPlayers: 1,
+            maxPlayers: 2,
             maxRounds: 5,
             roundTimeout: 20,
             startTimeout: 3,
@@ -55,7 +55,7 @@ class QuizzerSocketManager {
             this.joinRoomEvent(socket);
             this.playerReadyEvent(socket);
             this.answerQuestionEvent(socket);
-            this.gradeQuestionEvent(socket);
+            this.approveAnswerEvent(socket);
             this.requestStateEvent(socket);
             this.leaveRoomEvent(socket);
             this.disconnectEvent(socket);
@@ -150,10 +150,10 @@ class QuizzerSocketManager {
         });
     }
 
-    gradeQuestionEvent(socket: Socket) {
-        socket.on(EventListeners.GradeQuestion, (playerId: string) => {
+    approveAnswerEvent(socket: Socket) {
+        socket.on(EventListeners.ApproveAnswer, (playerId: string) => {
             const session = this.demandSession(socket);
-            this.gameSessionsManager.markAnswerCorrect(session.sessionId, playerId);
+            this.gameSessionsManager.approveAnswer(session.sessionId, playerId);
         });
     }
 
@@ -230,11 +230,21 @@ function toSerializableObject(obj: any): any {
         if (obj.hasOwnProperty(key)) {
             const value = obj[key];
             if (value instanceof Map) {
-                serializableObj[key] = Array.from(value.entries());
+                serializableObj[key] = serializeMap(value);
             } else {
                 serializableObj[key] = value;
             }
         }
     }
     return serializableObj;
+}
+
+function serializeMap(value: any): any {
+    let newValue;
+    if (value instanceof Map) {
+        newValue = Array.from(value).map(([k, v]) => [k, serializeMap(v)]);
+    } else {
+        newValue = value;
+    }
+    return newValue;
 }

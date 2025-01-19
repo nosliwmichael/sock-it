@@ -100,20 +100,24 @@ export class QuizzerSessionsManager {
 
     answerQuestion(sessionId: string, answer: QuizzerAnswer) {
         let session = this.sessions.get(sessionId);
-        if (session?.roomName) {
-            answer.id = randomUUID();
-            answer.playerId = session?.playerId;
-            answer.correct = false;
+        if (session?.roomName && session.playerId) {
+            let newAnswer: QuizzerAnswer = {
+                id: randomUUID(),
+                playerId: session.playerId,
+                myAnswer: answer.myAnswer,
+                answer: answer.answer,
+                correct: false,
+            };
             let room = this.rooms.get(session.roomName);
-            room?.answerQuestion(answer);
+            room?.answerQuestion(newAnswer);
         }
     }
 
-    markAnswerCorrect(sessionId: string, playerId: string) {
+    approveAnswer(sessionId: string, playerId: string) {
         let session = this.sessions.get(sessionId);
         if (session?.playerId !== playerId && session?.roomName) {
             let room = this.rooms.get(session.roomName);
-            room?.markAnswerCorrect(playerId);
+            room?.approveAnswer(playerId);
         }
     }
 

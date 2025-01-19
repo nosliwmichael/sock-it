@@ -68,21 +68,24 @@ export class QuizzerStateManager {
         if (!this.gameState.isAnswering) {
             return;
         }
-        let question = this.gameState.questions[this.gameState.round];
+        let question = this.gameState.questions[this.gameState.round - 1];
         let roundAnswers = this.gameState.answers.get(question.id);
         if (!roundAnswers?.size) {
             roundAnswers = new Map();
             this.gameState.answers.set(question.id, roundAnswers);
         }
         roundAnswers.set(answer.playerId, answer);
+        this.gameState.answers.set(question.id, roundAnswers);
     }
 
-    markAnswerCorrect(playerId: string) {
-        let question = this.gameState.questions[this.gameState.round];
+    approveAnswer(playerId: string) {
+        let question = this.gameState.questions[this.gameState.round - 1];
         let roundAnswers = this.gameState.answers.get(question.id);
         let answer = roundAnswers?.get(playerId);
-        if (answer) {
+        if (answer && roundAnswers) {
             answer.correct = true;
+            roundAnswers.set(playerId, answer);
+            this.gameState.answers.set(question.id, roundAnswers);
         }
     }
 
@@ -91,7 +94,8 @@ export class QuizzerStateManager {
             player.score = 0;
             for (let i = 0; i < this.gameState.round; i++) {
                 let question = this.gameState.questions[i];
-                let answer = this.gameState.answers.get(question.id)?.get(playerId);
+                let answers = this.gameState.answers.get(question.id);
+                let answer = answers?.get(playerId);
                 if (answer?.correct) {
                     player.score++;
                 }
@@ -116,7 +120,6 @@ export class QuizzerStateManager {
             this.startGame(callback);
         }
         else if (this.gameState.isRoundStarted && this.gameState.round < this.config.maxRounds) {
-
             this.startRound(callback);
         }
     }

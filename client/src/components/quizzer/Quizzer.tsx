@@ -16,6 +16,7 @@ const QuizzerScreen: React.FC<QuizzerScreenProps> = (props) => {
   const { setHeader } = useHeader();
   const [me, setMe] = useState<Player | undefined>(undefined);
   const [opponent, setOpponent] = useState<Player | undefined>(undefined);
+  const [opponentAnswer, setOpponentAnswer] = useState<string | undefined>(undefined);
   const [answerForm, setAnswerForm] = useState({
     answer: '',
     opponentAnswer: ''
@@ -41,6 +42,10 @@ const QuizzerScreen: React.FC<QuizzerScreenProps> = (props) => {
       myAnswer: answerForm.answer,
     }
     socket.emit('answerQuestion', answer);
+  };
+
+  const approveAnswer = (e: React.MouseEvent) => {
+    socket.emit('approveAnswer', opponent?.id);
   };
 
   const leaveRoom = (e: React.MouseEvent) => {
@@ -70,6 +75,12 @@ const QuizzerScreen: React.FC<QuizzerScreenProps> = (props) => {
           setOpponent(v);
         }
       });
+    }
+    if (gameState && opponent && gameState?.answers) {
+      let round = gameState.round === 0 ? 0 : gameState.round - 1;
+      let questionId = gameState.questions[round].id;
+      let answer = gameState.answers.get(questionId)?.get(opponent.id)?.answer;
+      setOpponentAnswer(answer);
     }
   }, [gameState]);
 
@@ -146,7 +157,7 @@ const QuizzerScreen: React.FC<QuizzerScreenProps> = (props) => {
             <h2>{gameState.roundTimer > 0 ? `Question ending in ${gameState.roundTimer}...` : "Time's up!"}</h2>
           </div>
           <div className="question">
-            <h2>{gameState.round > 0 ? gameState.questions[gameState.round].question : ''}</h2>
+            <h2>{gameState.round > 0 ? gameState.questions[gameState.round - 1].question : ''}</h2>
           </div>
           <div className="answer">
             <form onSubmit={submitAnswer}>
@@ -167,6 +178,15 @@ const QuizzerScreen: React.FC<QuizzerScreenProps> = (props) => {
               <button className="button" type="submit" disabled={!gameState.isAnswering}>Submit</button>
             </form>
           </div>
+        </div>
+      )}
+
+      {opponentAnswer && (
+        <div>
+          <p>{opponentAnswer}</p>
+          <button className="button" onClick={approveAnswer}>
+            Approve Answer
+          </button>
         </div>
       )}
 
