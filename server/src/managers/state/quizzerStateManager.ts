@@ -120,7 +120,7 @@ export class QuizzerStateManager {
         if (!this.gameState.isGameStarted) {
             this.startGame(callback);
         }
-        else if (this.gameState.isRoundStarted && this.gameState.round < this.config.maxRounds) {
+        else if (this.hasMaxPlayers() && this.gameState.round < this.config.maxRounds) {
             this.startRound(callback);
         } else {
             console.log(`Game Started: ${this.gameState.isGameStarted}, Round Started: ${this.gameState.isRoundStarted}, Round: ${this.gameState.round}`);

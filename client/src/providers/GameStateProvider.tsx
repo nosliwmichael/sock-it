@@ -35,7 +35,7 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({
     setGameState(state);
   }, []);
 
-  const value = useMemo(() => ({ gameState, setGameState: setConvertedGameState }), [gameState]);
+  const value = useMemo(() => ({ gameState, setGameState: setConvertedGameState }), [gameState, setConvertedGameState]);
 
   return (
     <GameStateContext.Provider value={value}>

@@ -5,12 +5,8 @@ import { useGameState } from "../../providers/GameStateProvider";
 import { Player } from "../../types/player";
 import { useNavigate } from "react-router-dom";
 import { useHeader } from "../../providers/HeaderProvider";
-import { QuizzerAnswer } from "../../types/answer";
 
-interface QuizzerScreenProps {
-}
-
-const QuizzerScreen: React.FC<QuizzerScreenProps> = (props) => {
+const QuizzerScreen: React.FC = () => {
   const { socket } = useSocket();
   const { gameState, setGameState } = useGameState();
   const { setHeader } = useHeader();
@@ -56,7 +52,7 @@ const QuizzerScreen: React.FC<QuizzerScreenProps> = (props) => {
 
   useEffect(() => {
     setHeader(`Quizzer: ${gameState?.roomName} Room`);
-  }, [gameState]);
+  }, [gameState, setHeader]);
 
   useEffect(() => {
     if (isLeaveRoom) {
@@ -82,7 +78,7 @@ const QuizzerScreen: React.FC<QuizzerScreenProps> = (props) => {
       let answer = gameState.answers.get(questionId)?.get(opponent.id)?.answer;
       setOpponentAnswer(answer);
     }
-  }, [gameState]);
+  }, [gameState, myPlayerId, opponent]);
 
   useEffect(() => {
     if (!socket.hasListeners("stateChange")) {
@@ -91,7 +87,7 @@ const QuizzerScreen: React.FC<QuizzerScreenProps> = (props) => {
     return () => {
       socket.off("stateChange");
     };
-  }, [socket]);
+  }, [socket, setGameState]);
 
   useEffect(() => {
     if (socket) {

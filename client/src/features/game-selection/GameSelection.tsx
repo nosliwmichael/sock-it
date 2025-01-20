@@ -26,7 +26,7 @@ const GameSelection: React.FC<GameSelectionProps> = (props) => {
 
   useEffect(() => {
     setHeader("Select a Game");
-  }, []);
+  }, [setHeader]);
 
   const handleButtonClick = (gameMode: string) => {
     props.setSelectedGameMode(GameModeMap.get(gameMode));

@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { Routes, Route } from "react-router-dom";
 import io from "socket.io-client";
-import "./App.css";
 import RoomSelection from "../features/room-selection/RoomSelection";
 import { useSocket } from "../providers/SocketProvider";
 import { v4 as uuidv4 } from "uuid";
@@ -28,10 +27,10 @@ const App = () => {
     localStorage.setItem(SESSION_ID, newSessionId);
   }
 
-  const selectGame = (gameMode: any) => {
+  const selectGame = useCallback((gameMode: any) => {
     setSelectedGameMode(gameMode);
     setSocketConnectionPath(gameMode.path);
-  }
+  }, []);
 
   useEffect(() => {
     if (socketConnectionPath?.trim().length) {
@@ -44,7 +43,7 @@ const App = () => {
         },
       }));
     }
-  }, [socketConnectionPath]);
+  }, [sessionId, setSocket, socketConnectionPath]);
 
   return (
     <div className="App">

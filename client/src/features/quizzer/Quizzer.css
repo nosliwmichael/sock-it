@@ -19,7 +19,8 @@
     border-collapse: collapse;
 }
 
-.scoreboard th, .scoreboard td {
+.scoreboard th,
+.scoreboard td {
     padding: 0.5em;
     text-align: left;
     border-bottom: 1px solid #ccc;
@@ -49,11 +50,7 @@
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-.button:disabled {
-    background-color: #f0f2f5;
-    color: #ccc;
-    cursor: not-allowed;
+    to {
+        transform: rotate(360deg);
+    }
 }

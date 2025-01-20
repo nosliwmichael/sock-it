@@ -22,7 +22,7 @@ const RoomSelectionScreen: React.FC<RoomSelectionScreenProps> = (props) => {
 
   useEffect(() => {
     setHeader('Select a Room');
-  }, []);
+  }, [setHeader]);
 
   useEffect(() => {
     if (!props.gameMode) {
@@ -30,7 +30,7 @@ const RoomSelectionScreen: React.FC<RoomSelectionScreenProps> = (props) => {
     } else if (isSubmitted || gameState?.roomName) {
       navigate(props.gameMode?.path);
     }
-  }, [isSubmitted, gameState]);
+  }, [isSubmitted, gameState, navigate, props.gameMode]);
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
