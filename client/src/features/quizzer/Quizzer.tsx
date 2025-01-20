@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import "./Quizzer.css";
-import { useSocket } from "../providers/SocketProvider";
-import { useGameState } from "../providers/GameStateProvider";
-import { Player } from "../../models/player";
+import { useSocket } from "../../providers/SocketProvider";
+import { useGameState } from "../../providers/GameStateProvider";
+import { Player } from "../../types/player";
 import { useNavigate } from "react-router-dom";
-import { useHeader } from "../providers/HeaderProvider";
-import { QuizzerAnswer } from "../../models/answer";
+import { useHeader } from "../../providers/HeaderProvider";
+import { QuizzerAnswer } from "../../types/answer";
 
 interface QuizzerScreenProps {
 }

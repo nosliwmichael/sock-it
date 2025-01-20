@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useHeader } from "../providers/HeaderProvider";
+import { useHeader } from "../../providers/HeaderProvider";
 
 enum GameMode {
   Quizzer = "Quizzer",

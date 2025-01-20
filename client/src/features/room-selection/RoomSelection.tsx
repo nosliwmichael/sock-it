@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import "./RoomSelection.css";
-import { useSocket } from "../providers/SocketProvider";
+import { useSocket } from "../../providers/SocketProvider";
 import { useNavigate } from "react-router-dom";
-import { useHeader } from "../providers/HeaderProvider";
-import { useGameState } from "../providers/GameStateProvider";
+import { useHeader } from "../../providers/HeaderProvider";
+import { useGameState } from "../../providers/GameStateProvider";
 
 interface RoomSelectionScreenProps {
   gameMode?: any;

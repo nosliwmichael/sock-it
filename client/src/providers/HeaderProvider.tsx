@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useMemo, useState } from "react";
 
 interface HeaderContextProps {
     header: string | undefined;
@@ -25,8 +25,9 @@ export const HeaderProvider: React.FC<HeaderProviderProps> = ({
     children,
 }) => {
     const [header, setHeader] = useState<string | undefined>(undefined);
+    const value = useMemo(() => ({ header, setHeader }), [header]);
     return (
-        <HeaderContext.Provider value={{ header, setHeader }}>
+        <HeaderContext.Provider value={value}>
             {children}
         </HeaderContext.Provider>
     );

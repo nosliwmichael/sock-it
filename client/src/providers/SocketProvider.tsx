@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
 interface SocketContextProps {
@@ -29,8 +29,10 @@ export const SocketProvider: React.FC<SocketProviderProps> = (props) => {
     };
   }, [socket]);
 
+  const value = useMemo(() => ({ socket, setSocket }), [socket]);
+
   return (
-    <SocketContext.Provider value={{ socket, setSocket }}>
+    <SocketContext.Provider value={value}>
       {props.children}
     </SocketContext.Provider>
   );

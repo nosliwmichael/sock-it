@@ -154,6 +154,10 @@ class QuizzerSocketManager {
         socket.on(EventListeners.ApproveAnswer, (playerId: string) => {
             const session = this.demandSession(socket);
             this.gameSessionsManager.approveAnswer(session.sessionId, playerId);
+            if (session.roomName) {
+                this.gameSessionsManager.calculatePoints(session.roomName);
+            }
+            this.sendState(session);
         });
     }
 

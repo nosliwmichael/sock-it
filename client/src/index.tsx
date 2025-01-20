@@ -1,11 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
-import App from "./App";
-import { SocketProvider } from "./components/providers/SocketProvider";
-import { GameStateProvider } from "./components/providers/GameStateProvider";
+import App from "./app/App";
+import { SocketProvider } from "./providers/SocketProvider";
+import { GameStateProvider } from "./providers/GameStateProvider";
 import { BrowserRouter } from "react-router-dom";
-import { HeaderProvider } from "./components/providers/HeaderProvider";
+import { HeaderProvider } from "./providers/HeaderProvider";
 
 const rootElement = document.getElementById("root");
 if (!rootElement) {

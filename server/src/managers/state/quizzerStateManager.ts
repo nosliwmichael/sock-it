@@ -116,11 +116,14 @@ export class QuizzerStateManager {
     }
 
     start(callback: Function) {
+        console.log('Start called');
         if (!this.gameState.isGameStarted) {
             this.startGame(callback);
         }
         else if (this.gameState.isRoundStarted && this.gameState.round < this.config.maxRounds) {
             this.startRound(callback);
+        } else {
+            console.log(`Game Started: ${this.gameState.isGameStarted}, Round Started: ${this.gameState.isRoundStarted}, Round: ${this.gameState.round}`);
         }
     }
 
@@ -152,6 +155,7 @@ export class QuizzerStateManager {
                 clearInterval(intervalId);
                 this.gameState.isRoundStarted = false;
                 this.gameState.isAnswering = false;
+                this.gameState.players.forEach(p => p.ready = false);
                 this.calculatePoints();
             }
             callback();

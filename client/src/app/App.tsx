@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import io from "socket.io-client";
 import "./App.css";
-import RoomSelection from "./components/room-selection/RoomSelection";
-import { useSocket } from "./components/providers/SocketProvider";
+import RoomSelection from "../features/room-selection/RoomSelection";
+import { useSocket } from "../providers/SocketProvider";
 import { v4 as uuidv4 } from "uuid";
-import GameSelection from "./components/game-selection/GameSelection";
-import QuizzerScreen from "./components/quizzer/Quizzer";
-import { useHeader } from "./components/providers/HeaderProvider";
+import GameSelection from "../features/game-selection/GameSelection";
+import QuizzerScreen from "../features/quizzer/Quizzer";
+import { useHeader } from "../providers/HeaderProvider";
 
 const serverURL = process.env.REACT_APP_SOCK_IT_URL;
 const port = 3001;

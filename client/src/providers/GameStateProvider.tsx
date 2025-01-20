@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState } from "react";
-import { GameState } from "../../models/gameState";
+import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { GameState } from "../types/gameState";
 
 interface GameStateContextProps {
   gameState: GameState | undefined;
@@ -27,16 +27,18 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({
 }) => {
   const [gameState, setGameState] = useState<GameState | undefined>(undefined);
 
-  const setConvertedGameState = (state: any | undefined) => {
+  const setConvertedGameState = useCallback((state: any | undefined) => {
     if (state) {
       state.players = new Map(state.players);
       state.answers = new Map(state.answers.map((a: any) => [a[0], new Map(a[1])]));
     }
     setGameState(state);
-  };
+  }, []);
+
+  const value = useMemo(() => ({ gameState, setGameState: setConvertedGameState }), [gameState]);
 
   return (
-    <GameStateContext.Provider value={{ gameState, setGameState: setConvertedGameState }}>
+    <GameStateContext.Provider value={value}>
       {children}
     </GameStateContext.Provider>
   );
