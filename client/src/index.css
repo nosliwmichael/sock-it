@@ -8,11 +8,6 @@ body {
   text-align: center;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-}
-
 .header {
   background-color: #282c34;
   min-height: 10vh;
@@ -26,16 +21,38 @@ code {
 }
 
 .button {
+  width: 80%;
+  max-width: 300px;
+  margin: 10px 0;
+  padding: 15px 30px;
   background-color: #4caf50;
+  transition: background-color 2.3s ease;
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  margin: 10px 0;
   font-size: 1.2em;
-  transition: background-color 0.3s ease;
 }
 
 .button:hover {
   background-color: #45a049;
+}
+
+.button-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.button:disabled {
+  background-color: #f0f2f5;
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.input {
+  margin-top: 1em;
+  width: 80%;
+  height: 2em;
+  font-size: 1.2em;
 }

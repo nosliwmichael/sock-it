@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "build": "npm --prefix ./client run build && npm --prefix ./server run build",
+    "start:client": "npm --prefix ./client run start",
+    "start:server": "npm --prefix ./server run start"
+  },
+  "devDependencies": {
+    "@types/socket.io": "^3.0.2"
+  }
+}

@@ -1,9 +1,5 @@
-module.exports = (io) => {
-    quizTurn = io.of('/quiz-me');
-
-    registerIoEvents(quizTurn);
-
-    return quizTurn;
+export default (io) => {
+    registerIoEvents(io.of('/quiz-me'));
 }
 
 function registerIoEvents(io) {
